@@ -35,10 +35,15 @@ export const CATEGORIES = [
   { id: 'platform', label: "Yükseltilebilir Seyyar İş Platformları" },
   { id: 'forklift', label: "Forkliftler" },
   { id: 'kazici', label: "Kazıcı Yükleyiciler" },
+  { id: 'buhar', label: "Buhar Kazanı" },
+  { id: 'genlesme', label: "Genleşme Tankı" },
+  { id: 'sicaksu', label: "Sıcak Su Kazanı" },
+  { id: 'kompresor', label: "Kompresör Hava Tankı" },
+  { id: 'boyler', label: "Boyler" }
 ];
 
-const brands = ["Linde", "Cat", "Toyota", "Jungheinrich", "Komatsu", "Konecranes", "BVS", "Atlas", "Manitou"];
-const places = ["Depo A", "Depo B", "Sevkiyat", "Üretim Hattı 1", "Üretim Hattı 2", "Bakım Atölyesi", "Dış Saha"];
+const brands = ["Linde", "Cat", "Toyota", "Jungheinrich", "Komatsu", "Konecranes", "BVS", "Atlas", "Manitou", "Ayvaz", "Erensan", "Alarko"];
+const places = ["Depo A", "Depo B", "Sevkiyat", "Üretim Hattı 1", "Üretim Hattı 2", "Bakım Atölyesi", "Dış Saha", "Kazan Dairesi"];
 const possibleDeficiencies = [
   "Fren lambası yanmıyor",
   "Yağ sızıntısı mevcut",
@@ -49,7 +54,10 @@ const possibleDeficiencies = [
   "Kapı kildi arızalı",
   "Zincirde deformasyon",
   "Periyodik bakım etiketi eksik",
-  "Akü kapağı kırık"
+  "Akü kapağı kırık",
+  "Basınç göstergesi arızalı",
+  "Emniyet ventili testi başarısız",
+  "Su seviye göstergesi okunmuyor"
 ];
 
 // Helper to generate mock inventory
@@ -59,12 +67,12 @@ const generateInventory = () => {
 
   LOCATIONS.forEach(loc => {
     CATEGORIES.forEach(cat => {
-      // Generate 8-12 items per category per location
-      const count = Math.floor(Math.random() * 5) + 8;
+      // Generate 5-8 items per category per location
+      const count = Math.floor(Math.random() * 4) + 5;
 
       for (let i = 0; i < count; i++) {
-        const isDefective = Math.random() > 0.6; // 40% chance of suitable
-        const hasMinorFault = Math.random() > 0.7;
+        const isDefective = Math.random() > 0.7; // 30% chance of defect
+        const hasMinorFault = Math.random() > 0.8;
 
         let status = "Uygun";
         let deficiencies = [];
@@ -80,33 +88,31 @@ const generateInventory = () => {
           deficiencies.push(possibleDeficiencies[Math.floor(Math.random() * possibleDeficiencies.length)]);
         }
 
-        // Generate random control dates to simulate different countdown scenarios
         const today = new Date();
-        // Randomly determine scenario: 0=normal, 1=upcoming(<10 days), 2=overdue
+        const controlDate = new Date(today);
+        const nextControlDate = new Date(today);
+
+        // Scenario generation for Dates
         const scenario = Math.random();
 
-        let controlDate = new Date(today);
-        let nextControlDate = new Date(today);
-
+        let daysAgo;
         if (scenario < 0.1) {
-          // Overdue (negative)
-          // Next control date was 1-30 days ago
-          nextControlDate.setDate(today.getDate() - Math.floor(Math.random() * 30) - 1);
+          // Overdue: Last control was more than 1 year ago (e.g., 380 days ago)
+          daysAgo = 365 + Math.floor(Math.random() * 30) + 1;
         } else if (scenario < 0.2) {
-          // Upcoming (<10 days)
-          const daysToAdd = Math.floor(Math.random() * 10);
-          nextControlDate.setDate(today.getDate() + daysToAdd);
+          // Upcoming (<10 days left): Last control was almost 1 year ago (e.g., 360 days ago)
+          daysAgo = 365 - Math.floor(Math.random() * 9);
         } else {
-          // Normal (10+ days)
-          // Next control date is randomly 10 to 300 days in future
-          const daysToAdd = Math.floor(Math.random() * 290) + 11;
-          nextControlDate.setDate(today.getDate() + daysToAdd);
+          // Normal: Last control was sometime within the last year (e.g., 10 to 300 days ago)
+          daysAgo = Math.floor(Math.random() * 300) + 30;
         }
 
-        // Set controlDate to be exactly 3 months (90 days) before nextControlDate
-        controlDate.setFullYear(nextControlDate.getFullYear());
-        controlDate.setMonth(nextControlDate.getMonth() - 3);
-        controlDate.setDate(nextControlDate.getDate());
+        // Set Control Date to Past
+        controlDate.setDate(today.getDate() - daysAgo);
+
+        // Set Next Control Date to exactly 1 year after Control Date
+        nextControlDate.setTime(controlDate.getTime());
+        nextControlDate.setFullYear(nextControlDate.getFullYear() + 1);
 
         const formatDate = (date) => {
           return new Intl.DateTimeFormat('tr-TR').format(date);
@@ -116,7 +122,7 @@ const generateInventory = () => {
           id: idCounter++,
           locationId: loc.id,
           categoryId: cat.id,
-          name: `${cat.label.slice(0, -1)} ${i + 1}`, // remove plural suffix roughly
+          name: `${cat.label} ${i + 1}`,
           brand: brands[Math.floor(Math.random() * brands.length)],
           serialNo: `SN-${Math.floor(Math.random() * 10000)}`,
           place: places[Math.floor(Math.random() * places.length)],
