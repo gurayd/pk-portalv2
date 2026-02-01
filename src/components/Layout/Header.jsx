@@ -69,27 +69,9 @@ export default function Header() {
                                 {COMPANY_INFO.name}
                             </h1>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{COMPANY_INFO.address.split(',')[0]}</span>
-                                    <span style={{ color: '#cbd5e1' }}>|</span>
-                                    <span>{COMPANY_INFO.address.split(',')[1]}</span>
-                                </div>
-
-                                <div style={{ display: 'flex', gap: '16px', marginTop: '4px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <Hash size={14} />
-                                        <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{COMPANY_INFO.id}</span>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <Phone size={14} />
-                                        <span>{COMPANY_INFO.phone}</span>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <Mail size={14} />
-                                        <a href={`mailto:${COMPANY_INFO.email}`} style={{ color: 'var(--color-info)' }}>{COMPANY_INFO.email}</a>
-                                    </div>
-                                </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '1rem' }}>
+                                <span style={{ fontWeight: '600' }}>Firma No:</span>
+                                <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{COMPANY_INFO.id}</span>
                             </div>
                         </div>
                     </div>

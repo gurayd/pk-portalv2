@@ -7,6 +7,7 @@ import LocationList from './LocationList';
 import CategoryGrid from './CategoryGrid';
 import InventoryTable from './InventoryTable';
 import AnnouncementCarousel from './AnnouncementCarousel';
+import ContactInfo from './ContactInfo';
 
 // Data
 import { LOCATIONS, CATEGORIES, INVENTORY } from '../../data/mockData';
@@ -126,6 +127,7 @@ export default function Dashboard() {
                         <>
                             <LocationList locations={LOCATIONS} onSelectLocation={handleSelectLocation} />
                             <AnnouncementCarousel />
+                            <ContactInfo />
                         </>
                     )}
 
