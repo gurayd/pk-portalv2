@@ -109,7 +109,7 @@ const generateInventory = () => {
         controlDate.setDate(nextControlDate.getDate());
 
         const formatDate = (date) => {
-          return date.toISOString().split('T')[0];
+          return new Intl.DateTimeFormat('tr-TR').format(date);
         };
 
         items.push({

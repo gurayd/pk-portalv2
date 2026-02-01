@@ -8,11 +8,25 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
         return { text: 'Sakıncalı', icon: <AlertTriangle size={18} color="var(--color-danger)" /> };
     };
 
-    const getDaysRemaining = (nextDate) => {
+    const getDaysRemaining = (nextDateStr) => {
+        if (!nextDateStr) return 0;
+
+        // Parse "DD.MM.YYYY" manually if string
+        let next;
+        if (typeof nextDateStr === 'string' && nextDateStr.includes('.')) {
+            const [day, month, year] = nextDateStr.split('.').map(Number);
+            next = new Date(year, month - 1, day);
+        } else {
+            next = new Date(nextDateStr);
+        }
+
         const today = new Date();
-        const next = new Date(nextDate);
+        // Clear times to only compare dates
+        today.setHours(0, 0, 0, 0);
+        next.setHours(0, 0, 0, 0);
+
         const diffTime = next - today;
-        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return Math.floor(diffTime / (1000 * 60 * 60 * 24));
     };
 
     return (
