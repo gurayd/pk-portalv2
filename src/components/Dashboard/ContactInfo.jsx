@@ -21,7 +21,7 @@ export default function ContactInfo() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <User size={18} color="var(--color-primary)" />
                     <span>
-                        <span style={{ fontWeight: '600' }}>Son Kontrole Gelen Mühendis:</span> Mehmet Ali Akgül
+                        <span style={{ fontWeight: '600' }}>Kontrol Mühendisi:</span> Mehmet Ali Akgül - 0549 644 68 35
                     </span>
                 </div>
 
