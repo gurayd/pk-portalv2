@@ -126,7 +126,7 @@ export default function Dashboard() {
                     {view === 'LOCATIONS' && (
                         <>
                             <LocationList locations={LOCATIONS} onSelectLocation={handleSelectLocation} />
-                            <div style={{ maxWidth: '400px', margin: '0 auto', width: '100%' }}>
+                            <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
                                 <AnnouncementCarousel />
                             </div>
                             <ContactInfo />

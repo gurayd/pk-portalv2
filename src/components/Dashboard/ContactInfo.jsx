@@ -18,17 +18,17 @@ export default function ContactInfo() {
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.95rem', color: 'var(--text-secondary)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <User size={18} color="var(--color-primary)" />
                     <span>
-                        <span style={{ fontWeight: '600' }}>Kontrol Mühendisi:</span> Mehmet Ali Akgül - 0549 644 68 35
+                        <span style={{ fontWeight: '600' }}>Kontrol Mühendisi:</span> Mehmet Ali Akgül - 0549 644 68 35 - <a href="mailto:mehmetali.akgul@mmo.org.tr" style={{ color: 'var(--color-info)' }}>mehmetali.akgul@mmo.org.tr</a>
                     </span>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <Phone size={18} color="var(--color-primary)" />
                     <span>
-                        <span style={{ fontWeight: '600' }}>Teknik Hizmetler Birimi:</span> 0 232 462 33 33 - 2205 / 2263 / 2236
+                        <span style={{ fontWeight: '600' }}>Teknik Hizmetler Birimi:</span> 0 232 462 33 33 - 2205 / 2263 / 2236 - <a href="mailto:pk-izmir@mmo.org.tr" style={{ color: 'var(--color-info)' }}>pk-izmir@mmo.org.tr</a>
                     </span>
                 </div>
             </div>
