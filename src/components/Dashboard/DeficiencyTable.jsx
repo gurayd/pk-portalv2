@@ -21,7 +21,7 @@ export default function DeficiencyTable({ onClose, regionTitle }) {
                 backgroundColor: 'var(--color-surface)',
                 borderRadius: 'var(--radius-xl)',
                 width: '100%',
-                maxWidth: '900px',
+                maxWidth: '1100px',
                 maxHeight: '90vh',
                 display: 'flex',
                 flexDirection: 'column',
@@ -55,7 +55,7 @@ export default function DeficiencyTable({ onClose, regionTitle }) {
                         <thead>
                             <tr style={{ borderBottom: '2px solid #e2e8f0', textAlign: 'left', color: 'var(--text-secondary)' }}>
                                 <th style={{ padding: '12px' }}>Ekipman</th>
-                                <th style={{ padding: '12px' }}>Eksiklik / Sorun</th>
+                                <th style={{ padding: '12px', width: '450px' }}>Eksiklik / Sorun</th>
                                 <th style={{ padding: '12px' }}>Önem Derecesi</th>
                                 <th style={{ padding: '12px' }}>Tarih</th>
                                 <th style={{ padding: '12px' }}>Aksiyon</th>

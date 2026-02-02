@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Container from '../Layout/Container';
 import Header from '../Layout/Header';
 
@@ -18,6 +18,18 @@ export default function Dashboard({ onLogout }) {
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [isDownloadDropdownOpen, setIsDownloadDropdownOpen] = useState(false);
+    const downloadDropdownRef = useRef(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (downloadDropdownRef.current && !downloadDropdownRef.current.contains(event.target)) {
+                setIsDownloadDropdownOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     // Navigation Handlers
     const handleSelectLocation = (loc) => {
@@ -74,7 +86,7 @@ export default function Dashboard({ onLogout }) {
     return (
         <>
             <Header onLogout={onLogout} />
-            <Container>
+            <Container isWide={true}>
                 <main style={{ paddingBottom: '60px' }}>
 
                     {/* Top Navigation Bar: Breadcrumbs + Actions */}
@@ -159,7 +171,7 @@ export default function Dashboard({ onLogout }) {
                                 )}
 
                                 {view === 'INVENTORY' && (
-                                    <div style={{ position: 'relative' }}>
+                                    <div style={{ position: 'relative' }} ref={downloadDropdownRef}>
                                         <button
                                             onClick={() => setIsDownloadDropdownOpen(!isDownloadDropdownOpen)}
                                             className="hover-lift"

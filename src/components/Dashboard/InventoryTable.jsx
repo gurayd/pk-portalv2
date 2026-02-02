@@ -215,7 +215,7 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
             </div>
 
             <div style={{ overflowX: 'auto', minHeight: '400px' }}> {/* Min height to allow sorting dropdown space if list empty */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem', minWidth: '800px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                     <thead>
                         <tr style={{ backgroundColor: '#f1f5f9', color: 'var(--text-secondary)', textAlign: 'left' }}>
                             {renderHeaderCell("Marka / Seri No", "brand")}
@@ -223,7 +223,7 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
                             <th style={{ padding: '16px', fontWeight: '600' }}>Son Kontrol</th>
                             <th style={{ padding: '16px', fontWeight: '600' }}>Gelecek Kontrol</th>
                             {renderHeaderCell("Kalan Gün", "daysRemaining")} {/* Only Sort */}
-                            <th style={{ padding: '16px', fontWeight: '600' }}>Eksiklikler</th>
+                            <th style={{ padding: '16px', fontWeight: '600', width: '300px' }}>Eksiklikler</th>
                             {renderHeaderCell("Sonuç", "reportStatus", "reportStatus")} {/* Sorter + Filter */}
                             <th style={{ padding: '16px', fontWeight: '600' }}>Periyodik Kontrol Raporu</th>
                         </tr>

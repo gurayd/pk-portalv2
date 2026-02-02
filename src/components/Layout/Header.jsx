@@ -82,7 +82,7 @@ export default function Header({ onLogout }) {
                                             </span>
                                         </div>
                                         <div>
-                                            Teknik Hizmetler: 0 232 462 33 33 (D: 2205) - <a href="mailto:pk-izmir@mmo.org.tr" style={{ color: 'inherit', textDecoration: 'underline' }}>pk-izmir@mmo.org.tr</a>
+                                            Teknik Hizmetler: 0 232 462 33 33 (D: 2205,2236,2263) - <a href="mailto:pk-izmir@mmo.org.tr" style={{ color: 'inherit', textDecoration: 'underline' }}>pk-izmir@mmo.org.tr</a>
                                         </div>
                                     </div>
                                 </div>
