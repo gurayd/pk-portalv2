@@ -10,7 +10,7 @@ import AnnouncementCarousel from './AnnouncementCarousel';
 import ContactInfo from './ContactInfo';
 
 // Data
-import { LOCATIONS, CATEGORIES, INVENTORY, ARCHIVE_INVENTORY } from '../../data/mockData';
+import { LOCATIONS, CATEGORIES, INVENTORY, ARCHIVE_INVENTORY, SUB_CATEGORIES } from '../../data/mockData';
 import { ChevronRight, Home, FileSpreadsheet, Download, FileArchive, ChevronDown, Archive, Folder, Calendar } from 'lucide-react';
 
 export default function Dashboard({ onLogout }) {
@@ -18,6 +18,7 @@ export default function Dashboard({ onLogout }) {
     const [view, setView] = useState('LOCATIONS'); // LOCATIONS | CATEGORIES | INVENTORY | YEARS | DATES
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState(null);
+    const [selectedSubCategory, setSelectedSubCategory] = useState(null);
     const [selectedYear, setSelectedYear] = useState(null);
     const [selectedDate, setSelectedDate] = useState(null);
     const [isDownloadDropdownOpen, setIsDownloadDropdownOpen] = useState(false);
@@ -42,6 +43,15 @@ export default function Dashboard({ onLogout }) {
 
     const handleSelectCategory = (cat) => {
         setSelectedCategory(cat);
+        if (cat.isFolder) {
+            setView('SUB_CATEGORIES');
+        } else {
+            setView('INVENTORY');
+        }
+    };
+
+    const handleSelectSubCategory = (sub) => {
+        setSelectedSubCategory(sub);
         setView('INVENTORY');
     };
 
@@ -49,6 +59,7 @@ export default function Dashboard({ onLogout }) {
         setView('LOCATIONS');
         setSelectedLocation(null);
         setSelectedCategory(null);
+        setSelectedSubCategory(null);
         setSelectedYear(null);
         setSelectedDate(null);
     };
@@ -56,6 +67,12 @@ export default function Dashboard({ onLogout }) {
     const handleGoToCategories = () => {
         setView('CATEGORIES');
         setSelectedCategory(null);
+        setSelectedSubCategory(null);
+    };
+
+    const handleGoToSubCategories = () => {
+        setView('SUB_CATEGORIES');
+        setSelectedSubCategory(null);
     };
 
     const handleTabChange = (tab) => {
@@ -99,8 +116,11 @@ export default function Dashboard({ onLogout }) {
     };
 
     // Live Filter
-    const filteredInventory = selectedLocation && selectedCategory
-        ? INVENTORY.filter(item => item.locationId === selectedLocation.id && item.categoryId === selectedCategory.id)
+    const filteredInventory = selectedLocation && (selectedSubCategory || selectedCategory)
+        ? INVENTORY.filter(item =>
+            item.locationId === selectedLocation.id &&
+            item.categoryId === (selectedSubCategory ? selectedSubCategory.id : selectedCategory.id)
+        )
         : [];
 
     // Archive Filter
@@ -220,8 +240,20 @@ export default function Dashboard({ onLogout }) {
                                 {activeTab === 'LIVE' && selectedCategory && (
                                     <>
                                         <ChevronRight size={16} />
-                                        <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
+                                        <span
+                                            onClick={selectedSubCategory ? handleGoToSubCategories : handleGoToCategories}
+                                            style={{ cursor: 'pointer', fontWeight: (view === 'CATEGORIES' || view === 'SUB_CATEGORIES') ? '600' : '400', color: (view === 'CATEGORIES' || view === 'SUB_CATEGORIES') ? 'var(--text-primary)' : 'inherit' }}
+                                        >
                                             {selectedCategory.label}
+                                        </span>
+                                    </>
+                                )}
+
+                                {activeTab === 'LIVE' && selectedSubCategory && (
+                                    <>
+                                        <ChevronRight size={16} />
+                                        <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
+                                            {selectedSubCategory.label}
                                         </span>
                                     </>
                                 )}
@@ -430,10 +462,19 @@ export default function Dashboard({ onLogout }) {
                         />
                     )}
 
+                    {activeTab === 'LIVE' && view === 'SUB_CATEGORIES' && (
+                        <CategoryGrid
+                            categories={SUB_CATEGORIES.filter(s => s.parentId === selectedCategory.id)}
+                            onSelectCategory={handleSelectSubCategory}
+                            inventory={INVENTORY}
+                            selectedLocationId={selectedLocation.id}
+                        />
+                    )}
+
                     {activeTab === 'LIVE' && view === 'INVENTORY' && (
                         <InventoryTable
                             items={filteredInventory}
-                            categoryName={selectedCategory.label}
+                            categoryName={selectedSubCategory ? selectedSubCategory.label : selectedCategory.label}
                             onDownload={handleDownload}
                         />
                     )}

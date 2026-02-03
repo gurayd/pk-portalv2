@@ -39,7 +39,15 @@ export const CATEGORIES = [
   { id: 'genlesme', label: "Genleşme Tankı" },
   { id: 'sicaksu', label: "Sıcak Su Kazanı" },
   { id: 'kompresor', label: "Kompresör Hava Tankı" },
-  { id: 'boyler', label: "Boyler" }
+  { id: 'boyler', label: "Boyler" },
+  { id: 'diger', label: "Diğer", isFolder: true }
+];
+
+export const SUB_CATEGORIES = [
+  { id: 'yangin', parentId: 'diger', label: "Yangın Söndürme Sistemleri Periyodik Kontrolleri" },
+  { id: 'havalandirma', parentId: 'diger', label: "Havalandırma Tesisatı Periyodik Kontrolleri" },
+  { id: 'raf', parentId: 'diger', label: "Raf Periyodik Kontrolleri" },
+  { id: 'ndt', parentId: 'diger', label: "NDT" }
 ];
 
 const brands = ["Linde", "Cat", "Toyota", "Jungheinrich", "Komatsu", "Konecranes", "BVS", "Atlas", "Manitou", "Ayvaz", "Erensan", "Alarko"];
@@ -60,63 +68,50 @@ const possibleDeficiencies = [
   "Su seviye göstergesi okunmuyor"
 ];
 
+// Specialized Items for new categories
+const OTHER_ITEMS = {
+  yangin: [
+    { name: "Yangın Pompa İstasyonu Performans Test Raporu", brand: "Grundfos", place: "Pompa Odası" },
+    { name: "Gazlı Yangın Söndürme Sistemi Kontrol Raporu (FM200)", brand: "Fike", place: "Server Odası" },
+    { name: "Sulu Yangın Söndürme Tesisatı Kontrolü", brand: "Duyar", place: "Fabrika Geneli" },
+    { name: "Yangın Dolapları ve Hidrant Hattı Muayenesi", brand: "Zeybek", place: "Dış Saha" }
+  ],
+  havalandirma: [
+    { name: "Dövmehane Havalandırma Sistemi Periyodik Kontrolü", brand: "Systemair", place: "Dövmehane Bölümü" },
+    { name: "Kalıphane Toz Toplama Sistemi Muayenesi", brand: "Bomaksan", place: "Kalıphane" },
+    { name: "Ofis Bloğu Klima Santrali (AHU) Kontrol Raporu", brand: "Aldağ", place: "Ofis Çatı Katı" },
+    { name: "Boya Hattı Lokal Egzoz Sistemi Kontrolü", brand: "Nederman", place: "Boya Hattı" }
+  ],
+  raf: [
+    { name: "A-01 Sırt Sırta Raf Sistemi (5 Kompartman)", brand: "Temizel", place: "Lojistik Depo" },
+    { name: "B-04 Drive-in Raf Sistemi Muayenesi", brand: "ÜÇGE", place: "Hammadde Ambarı" },
+    { name: "C-12 Konsol Kollu Raf Tipi Kontrolü", brand: "Mecalux", place: "Dış Saha Sevkiyat" }
+  ],
+  ndt: [
+    { name: "T05 Tezgah Gövdesi Kaynak NDT (MT/PT) Raporu", brand: "Magnaflux", place: "Üretim Hattı" },
+    { name: "V801 Vinç Köprüsü Ana Kiriş NDT Kontrolü", brand: "Olympus", place: "Dövmehane" },
+    { name: "Isıl İşlem Fırını Basınçlı Kap Kaynak NDT", brand: "General Electric", place: "Isıl İşlem" }
+  ]
+};
+
 // Helper to generate mock inventory
 const generateInventory = () => {
   const items = [];
   let idCounter = 1000;
 
   LOCATIONS.forEach(loc => {
-    CATEGORIES.forEach(cat => {
-      // Generate 5-8 items per category per location
+    // 1. Regular Categories
+    CATEGORIES.filter(c => !c.isFolder).forEach(cat => {
       const count = Math.floor(Math.random() * 4) + 5;
-
       for (let i = 0; i < count; i++) {
-        const isDefective = Math.random() > 0.7; // 30% chance of defect
-        const hasMinorFault = Math.random() > 0.8;
-
-        let status = "Uygun";
-        let deficiencies = [];
-
-        if (isDefective) {
-          status = "Kusurlu";
-          const defCount = Math.floor(Math.random() * 3) + 1;
-          for (let j = 0; j < defCount; j++) {
-            deficiencies.push(possibleDeficiencies[Math.floor(Math.random() * possibleDeficiencies.length)]);
-          }
-        } else if (hasMinorFault) {
-          status = "Hafif Kusurlu";
-          deficiencies.push(possibleDeficiencies[Math.floor(Math.random() * possibleDeficiencies.length)]);
-        }
+        const isDefective = Math.random() > 0.8;
+        let deficiencies = isDefective ? [possibleDeficiencies[Math.floor(Math.random() * possibleDeficiencies.length)]] : [];
 
         const today = new Date();
         const controlDate = new Date(today);
-        const nextControlDate = new Date(today);
-
-        // Scenario generation for Dates
-        const scenario = Math.random();
-
-        let daysAgo;
-        if (scenario < 0.1) {
-          // Overdue: Last control was more than 1 year ago (e.g., 380 days ago)
-          daysAgo = 365 + Math.floor(Math.random() * 30) + 1;
-        } else if (scenario < 0.2) {
-          // Upcoming (<10 days left): Last control was almost 1 year ago (e.g., 360 days ago)
-          daysAgo = 365 - Math.floor(Math.random() * 9);
-        } else {
-          // Normal: Last control was sometime within the last year (e.g., 10 to 300 days ago)
-          daysAgo = Math.floor(Math.random() * 300) + 30;
-        }
-
-        // Set Control Date to Past
-        controlDate.setDate(today.getDate() - daysAgo);
-
-        // Set Next Control Date to exactly 1 year after Control Date
-        nextControlDate.setTime(controlDate.getTime());
+        controlDate.setDate(today.getDate() - (Math.floor(Math.random() * 300) + 30));
+        const nextControlDate = new Date(controlDate);
         nextControlDate.setFullYear(nextControlDate.getFullYear() + 1);
-
-        const formatDate = (date) => {
-          return new Intl.DateTimeFormat('tr-TR').format(date);
-        };
 
         items.push({
           id: idCounter++,
@@ -127,11 +122,39 @@ const generateInventory = () => {
           serialNo: `SN-${Math.floor(Math.random() * 10000)}`,
           place: places[Math.floor(Math.random() * places.length)],
           deficiencies: deficiencies,
-          reportStatus: status,
-          controlDate: formatDate(controlDate),
-          nextControlDate: formatDate(nextControlDate)
+          reportStatus: isDefective ? "Kusurlu" : "Uygun",
+          controlDate: new Intl.DateTimeFormat('tr-TR').format(controlDate),
+          nextControlDate: new Intl.DateTimeFormat('tr-TR').format(nextControlDate)
         });
       }
+    });
+
+    // 2. Sub Categories (Other)
+    SUB_CATEGORIES.forEach(sub => {
+      const specialItems = OTHER_ITEMS[sub.id];
+      specialItems.forEach((spec, idx) => {
+        const isDefective = Math.random() > 0.9;
+
+        const today = new Date();
+        const controlDate = new Date(today);
+        controlDate.setDate(today.getDate() - (Math.floor(Math.random() * 200) + 50));
+        const nextControlDate = new Date(controlDate);
+        nextControlDate.setFullYear(nextControlDate.getFullYear() + 1);
+
+        items.push({
+          id: idCounter++,
+          locationId: loc.id,
+          categoryId: sub.id, // We use sub.id as categoryId for actual items
+          name: spec.name,
+          brand: spec.brand,
+          serialNo: `SPEC-${sub.id.toUpperCase()}-${idx + 100}`,
+          place: spec.place,
+          deficiencies: isDefective ? ["Periyodik muayene sırasında teknik uygunsuzluk tespit edildi."] : [],
+          reportStatus: isDefective ? "Kusurlu" : "Uygun",
+          controlDate: new Intl.DateTimeFormat('tr-TR').format(controlDate),
+          nextControlDate: new Intl.DateTimeFormat('tr-TR').format(nextControlDate)
+        });
+      });
     });
   });
 
