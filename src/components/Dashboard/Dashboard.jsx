@@ -10,12 +10,12 @@ import AnnouncementCarousel from './AnnouncementCarousel';
 import ContactInfo from './ContactInfo';
 
 // Data
-import { LOCATIONS, CATEGORIES, INVENTORY, ARCHIVE_INVENTORY, SUB_CATEGORIES } from '../../data/mockData';
-import { ChevronRight, Home, FileSpreadsheet, Download, FileArchive, ChevronDown, Archive, Folder, Calendar } from 'lucide-react';
+import { LOCATIONS, CATEGORIES, INVENTORY, ARCHIVE_INVENTORY, SUB_CATEGORIES, AUTHORIZED_PERSONS } from '../../data/mockData';
+import { ChevronRight, Home, FileSpreadsheet, Download, FileArchive, ChevronDown, Archive, Folder, Calendar, Users, Briefcase } from 'lucide-react';
 
 export default function Dashboard({ onLogout }) {
-    const [activeTab, setActiveTab] = useState('LIVE'); // LIVE | ARCHIVE
-    const [view, setView] = useState('LOCATIONS'); // LOCATIONS | CATEGORIES | INVENTORY | YEARS | DATES
+    const [activeTab, setActiveTab] = useState('LIVE'); // LIVE | ARCHIVE | OFFICIALS
+    const [view, setView] = useState('LOCATIONS'); // LOCATIONS | CATEGORIES | INVENTORY | YEARS | DATES | LIST
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedSubCategory, setSelectedSubCategory] = useState(null);
@@ -77,7 +77,11 @@ export default function Dashboard({ onLogout }) {
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
-        handleGoHome();
+        if (tab === 'OFFICIALS') {
+            setView('LIST');
+        } else {
+            handleGoHome();
+        }
     };
 
     const handleSelectArchiveYear = (year) => {
@@ -187,6 +191,26 @@ export default function Dashboard({ onLogout }) {
                             >
                                 <Archive size={18} /> Arşiv
                             </button>
+                            <button
+                                onClick={() => handleTabChange('OFFICIALS')}
+                                style={{
+                                    padding: '12px 24px',
+                                    backgroundColor: activeTab === 'OFFICIALS' ? 'white' : 'transparent',
+                                    border: '1px solid ' + (activeTab === 'OFFICIALS' ? '#e2e8f0' : 'transparent'),
+                                    borderBottom: activeTab === 'OFFICIALS' ? '2px solid var(--color-primary)' : '1px solid transparent',
+                                    borderRadius: '8px 8px 0 0',
+                                    fontWeight: '700',
+                                    color: activeTab === 'OFFICIALS' ? 'var(--color-primary)' : 'var(--text-secondary)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    marginBottom: '-1px',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <Users size={18} /> Yetkili Kişiler
+                            </button>
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
@@ -194,11 +218,11 @@ export default function Dashboard({ onLogout }) {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                                 <div
                                     onClick={handleGoHome}
-                                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: view === 'LOCATIONS' ? 'var(--text-primary)' : 'var(--text-secondary)' }}
-                                    className={view !== 'LOCATIONS' ? 'hover-underline' : ''}
+                                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: (view === 'LOCATIONS' || view === 'LIST') ? 'var(--text-primary)' : 'var(--text-secondary)' }}
+                                    className={(view !== 'LOCATIONS' && view !== 'LIST') ? 'hover-underline' : ''}
                                 >
-                                    {activeTab === 'LIVE' ? <Home size={16} /> : <Archive size={16} />}
-                                    {activeTab === 'LIVE' ? 'Adresler' : 'Arşiv'}
+                                    {activeTab === 'LIVE' ? <Home size={16} /> : activeTab === 'ARCHIVE' ? <Archive size={16} /> : <Users size={16} />}
+                                    {activeTab === 'LIVE' ? 'Adresler' : activeTab === 'ARCHIVE' ? 'Arşiv' : 'Yetkili Kişiler'}
                                 </div>
 
                                 {selectedLocation && (
@@ -477,6 +501,55 @@ export default function Dashboard({ onLogout }) {
                             categoryName={selectedSubCategory ? selectedSubCategory.label : selectedCategory.label}
                             onDownload={handleDownload}
                         />
+                    )}
+
+                    {/* OFFICIALS SPECIFIC VIEW */}
+                    {activeTab === 'OFFICIALS' && view === 'LIST' && (
+                        <div style={{
+                            backgroundColor: 'white',
+                            borderRadius: '16px',
+                            border: '1px solid #e2e8f0',
+                            overflow: 'hidden',
+                            boxShadow: 'var(--shadow-sm)'
+                        }}>
+                            <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9' }}>
+                                <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', fontWeight: '700' }}>Yetkili Kişiler Listesi</h3>
+                                <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b', fontStyle: 'italic' }}>
+                                    * Tabloda bir değişiklik yapılması gerektiğinde lütfen Teknik Hizmetler ile iletişime geçiniz.
+                                </p>
+                            </div>
+                            <div style={{ overflowX: 'auto' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                    <thead>
+                                        <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>AD SOYAD</th>
+                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>ÜNVAN</th>
+                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>BULUNDUĞU FABRİKA</th>
+                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>GSM NO</th>
+                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>E-MAIL</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {AUTHORIZED_PERSONS.map(person => (
+                                            <tr key={person.id} style={{ borderBottom: '1px solid #f1f5f9' }} className="hover-bg-slate-50">
+                                                <td style={{ padding: '16px', fontWeight: '600', fontSize: '0.9rem' }}>{person.name}</td>
+                                                <td style={{ padding: '16px', fontSize: '0.9rem' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <Briefcase size={14} color="#94a3b8" />
+                                                        {person.title}
+                                                    </div>
+                                                </td>
+                                                <td style={{ padding: '16px', fontSize: '0.9rem', color: '#64748b' }}>{person.location}</td>
+                                                <td style={{ padding: '16px', fontSize: '0.9rem', color: 'var(--color-primary)', fontWeight: '500' }}>{person.gsm}</td>
+                                                <td style={{ padding: '16px', fontSize: '0.9rem' }}>
+                                                    <a href={`mailto:${person.email}`} style={{ color: '#3b82f6', textDecoration: 'none' }}>{person.email}</a>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     )}
 
                 </main>
