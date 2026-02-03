@@ -139,3 +139,57 @@ const generateInventory = () => {
 };
 
 export const INVENTORY = generateInventory();
+
+// Helper to generate ARCHIVE data (Strictly Historical)
+const generateArchiveData = () => {
+  const archiveItems = [];
+  const years = [2021, 2022, 2023, 2024];
+  let idCounter = 5000;
+
+  LOCATIONS.forEach(loc => {
+    years.forEach(year => {
+      const inspectionCycles = [
+        { date: `12.02.${year}`, label: 'Periyodik Kontrol - 01' },
+        { date: `18.10.${year}`, label: 'Periyodik Kontrol - 02' }
+      ];
+
+      inspectionCycles.forEach(cycle => {
+        const archivedCategories = CATEGORIES.slice(0, 10);
+
+        archivedCategories.forEach(cat => {
+          const count = 3;
+          for (let i = 0; i < count; i++) {
+            const isDefective = Math.random() > 0.7;
+            const deficiencies = [];
+
+            if (isDefective) {
+              const defCount = Math.floor(Math.random() * 2) + 1;
+              for (let j = 0; j < defCount; j++) {
+                deficiencies.push(possibleDeficiencies[Math.floor(Math.random() * possibleDeficiencies.length)]);
+              }
+            }
+
+            archiveItems.push({
+              id: idCounter++,
+              locationId: loc.id,
+              categoryId: cat.id,
+              year: year,
+              controlDate: cycle.date,
+              cycleLabel: cycle.label,
+              name: `${cat.label} ${i + 1}`,
+              brand: brands[Math.floor(Math.random() * brands.length)],
+              serialNo: `SN-${year}-${Math.floor(Math.random() * 9999)}`,
+              place: places[Math.floor(Math.random() * places.length)],
+              deficiencies: deficiencies,
+              reportStatus: isDefective ? "Kusurlu" : "Uygun",
+              nextControlDate: cycle.date
+            });
+          }
+        });
+      });
+    });
+  });
+  return archiveItems;
+};
+
+export const ARCHIVE_INVENTORY = generateArchiveData();

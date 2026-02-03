@@ -10,13 +10,16 @@ import AnnouncementCarousel from './AnnouncementCarousel';
 import ContactInfo from './ContactInfo';
 
 // Data
-import { LOCATIONS, CATEGORIES, INVENTORY } from '../../data/mockData';
-import { ChevronRight, Home, FileSpreadsheet, Download, FileArchive, ChevronDown } from 'lucide-react';
+import { LOCATIONS, CATEGORIES, INVENTORY, ARCHIVE_INVENTORY } from '../../data/mockData';
+import { ChevronRight, Home, FileSpreadsheet, Download, FileArchive, ChevronDown, Archive, Folder, Calendar } from 'lucide-react';
 
 export default function Dashboard({ onLogout }) {
-    const [view, setView] = useState('LOCATIONS'); // LOCATIONS | CATEGORIES | INVENTORY
+    const [activeTab, setActiveTab] = useState('LIVE'); // LIVE | ARCHIVE
+    const [view, setView] = useState('LOCATIONS'); // LOCATIONS | CATEGORIES | INVENTORY | YEARS | DATES
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState(null);
+    const [selectedYear, setSelectedYear] = useState(null);
+    const [selectedDate, setSelectedDate] = useState(null);
     const [isDownloadDropdownOpen, setIsDownloadDropdownOpen] = useState(false);
     const downloadDropdownRef = useRef(null);
 
@@ -46,11 +49,28 @@ export default function Dashboard({ onLogout }) {
         setView('LOCATIONS');
         setSelectedLocation(null);
         setSelectedCategory(null);
+        setSelectedYear(null);
+        setSelectedDate(null);
     };
 
     const handleGoToCategories = () => {
         setView('CATEGORIES');
         setSelectedCategory(null);
+    };
+
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        handleGoHome();
+    };
+
+    const handleSelectArchiveYear = (year) => {
+        setSelectedYear(year);
+        setView('DATES');
+    };
+
+    const handleSelectArchiveDate = (date) => {
+        setSelectedDate(date);
+        setView('INVENTORY');
     };
 
     const handleDownload = (id) => {
@@ -78,9 +98,22 @@ export default function Dashboard({ onLogout }) {
         setIsDownloadDropdownOpen(false);
     };
 
-    // Filter Inventory
+    // Live Filter
     const filteredInventory = selectedLocation && selectedCategory
         ? INVENTORY.filter(item => item.locationId === selectedLocation.id && item.categoryId === selectedCategory.id)
+        : [];
+
+    // Archive Filter
+    const archiveYears = selectedLocation
+        ? [...new Set(ARCHIVE_INVENTORY.filter(i => i.locationId === selectedLocation.id).map(i => i.year))].sort((a, b) => b - a)
+        : [];
+
+    const archiveDates = selectedLocation && selectedYear
+        ? [...new Set(ARCHIVE_INVENTORY.filter(i => i.locationId === selectedLocation.id && i.year === selectedYear).map(i => i.controlDate))]
+        : [];
+
+    const archiveInventory = selectedLocation && selectedDate
+        ? ARCHIVE_INVENTORY.filter(i => i.locationId === selectedLocation.id && i.controlDate === selectedDate)
         : [];
 
     return (
@@ -90,7 +123,52 @@ export default function Dashboard({ onLogout }) {
                 <main style={{ paddingBottom: '60px' }}>
 
                     {/* Top Navigation Bar: Breadcrumbs + Actions */}
-                    <div style={{ marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+                        {/* Tab Switcher */}
+                        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '0' }}>
+                            <button
+                                onClick={() => handleTabChange('LIVE')}
+                                style={{
+                                    padding: '12px 24px',
+                                    backgroundColor: activeTab === 'LIVE' ? 'white' : 'transparent',
+                                    border: '1px solid ' + (activeTab === 'LIVE' ? '#e2e8f0' : 'transparent'),
+                                    borderBottom: activeTab === 'LIVE' ? '2px solid var(--color-primary)' : '1px solid transparent',
+                                    borderRadius: '8px 8px 0 0',
+                                    fontWeight: '700',
+                                    color: activeTab === 'LIVE' ? 'var(--color-primary)' : 'var(--text-secondary)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    marginBottom: '-1px',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <Home size={18} /> Adresler
+                            </button>
+                            <button
+                                onClick={() => handleTabChange('ARCHIVE')}
+                                style={{
+                                    padding: '12px 24px',
+                                    backgroundColor: activeTab === 'ARCHIVE' ? 'white' : 'transparent',
+                                    border: '1px solid ' + (activeTab === 'ARCHIVE' ? '#e2e8f0' : 'transparent'),
+                                    borderBottom: activeTab === 'ARCHIVE' ? '2px solid var(--color-primary)' : '1px solid transparent',
+                                    borderRadius: '8px 8px 0 0',
+                                    fontWeight: '700',
+                                    color: activeTab === 'ARCHIVE' ? 'var(--color-primary)' : 'var(--text-secondary)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    marginBottom: '-1px',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <Archive size={18} /> Arşiv
+                            </button>
+                        </div>
+
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                             {/* Left: Breadcrumbs */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
@@ -99,22 +177,47 @@ export default function Dashboard({ onLogout }) {
                                     style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: view === 'LOCATIONS' ? 'var(--text-primary)' : 'var(--text-secondary)' }}
                                     className={view !== 'LOCATIONS' ? 'hover-underline' : ''}
                                 >
-                                    <Home size={16} /> Adresler
+                                    {activeTab === 'LIVE' ? <Home size={16} /> : <Archive size={16} />}
+                                    {activeTab === 'LIVE' ? 'Adresler' : 'Arşiv'}
                                 </div>
 
                                 {selectedLocation && (
                                     <>
                                         <ChevronRight size={16} />
                                         <span
-                                            onClick={handleGoToCategories}
-                                            style={{ cursor: 'pointer', fontWeight: view === 'CATEGORIES' ? '600' : '400', color: view === 'CATEGORIES' ? 'var(--text-primary)' : 'inherit' }}
+                                            onClick={() => {
+                                                if (activeTab === 'LIVE') handleGoToCategories();
+                                                else { setView('YEARS'); setSelectedYear(null); setSelectedDate(null); }
+                                            }}
+                                            style={{ cursor: 'pointer', fontWeight: view === (activeTab === 'LIVE' ? 'CATEGORIES' : 'YEARS') ? '600' : '400', color: view === (activeTab === 'LIVE' ? 'CATEGORIES' : 'YEARS') ? 'var(--text-primary)' : 'inherit' }}
                                         >
                                             {selectedLocation.name}
                                         </span>
                                     </>
                                 )}
 
-                                {selectedCategory && (
+                                {activeTab === 'ARCHIVE' && selectedYear && (
+                                    <>
+                                        <ChevronRight size={16} />
+                                        <span
+                                            onClick={() => { setView('DATES'); setSelectedDate(null); }}
+                                            style={{ cursor: 'pointer', fontWeight: view === 'DATES' ? '600' : '400', color: view === 'DATES' ? 'var(--text-primary)' : 'inherit' }}
+                                        >
+                                            {selectedYear}
+                                        </span>
+                                    </>
+                                )}
+
+                                {activeTab === 'ARCHIVE' && selectedDate && (
+                                    <>
+                                        <ChevronRight size={16} />
+                                        <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
+                                            {selectedDate}
+                                        </span>
+                                    </>
+                                )}
+
+                                {activeTab === 'LIVE' && selectedCategory && (
                                     <>
                                         <ChevronRight size={16} />
                                         <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
@@ -239,14 +342,86 @@ export default function Dashboard({ onLogout }) {
                     {/* Content Views */}
                     {view === 'LOCATIONS' && (
                         <>
-                            <LocationList locations={LOCATIONS} onSelectLocation={handleSelectLocation} />
-                            <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
-                                <AnnouncementCarousel />
-                            </div>
+                            <LocationList
+                                locations={LOCATIONS}
+                                onSelectLocation={(loc) => {
+                                    setSelectedLocation(loc);
+                                    setView(activeTab === 'LIVE' ? 'CATEGORIES' : 'YEARS');
+                                }}
+                            />
+                            {activeTab === 'LIVE' && (
+                                <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+                                    <AnnouncementCarousel />
+                                </div>
+                            )}
                         </>
                     )}
 
-                    {view === 'CATEGORIES' && (
+                    {/* ARCHIVE SPECIFIC VIEWS */}
+                    {activeTab === 'ARCHIVE' && view === 'YEARS' && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+                            {archiveYears.map(year => (
+                                <div
+                                    key={year}
+                                    onClick={() => handleSelectArchiveYear(year)}
+                                    className="hover-lift"
+                                    style={{
+                                        backgroundColor: 'white',
+                                        padding: '30px',
+                                        borderRadius: '16px',
+                                        border: '1px solid #e2e8f0',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        cursor: 'pointer',
+                                        boxShadow: 'var(--shadow-sm)'
+                                    }}
+                                >
+                                    <Folder size={48} color="#64748b" fill="#f1f5f9" />
+                                    <span style={{ fontWeight: '700', fontSize: '1.1rem' }}>{year}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {activeTab === 'ARCHIVE' && view === 'DATES' && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+                            {archiveDates.map(date => (
+                                <div
+                                    key={date}
+                                    onClick={() => handleSelectArchiveDate(date)}
+                                    className="hover-lift"
+                                    style={{
+                                        backgroundColor: 'white',
+                                        padding: '30px',
+                                        borderRadius: '16px',
+                                        border: '1px solid #e2e8f0',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        cursor: 'pointer',
+                                        boxShadow: 'var(--shadow-sm)'
+                                    }}
+                                >
+                                    <Calendar size={48} color="#3b82f6" fill="#eff6ff" />
+                                    <span style={{ fontWeight: '700', fontSize: '1.1rem' }}>{date}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {activeTab === 'ARCHIVE' && view === 'INVENTORY' && (
+                        <InventoryTable
+                            items={archiveInventory}
+                            categoryName={`${selectedLocation.name} - ${selectedDate}`}
+                            onDownload={handleDownload}
+                        />
+                    )}
+
+                    {/* LIVE SPECIFIC VIEWS */}
+                    {activeTab === 'LIVE' && view === 'CATEGORIES' && (
                         <CategoryGrid
                             categories={CATEGORIES}
                             onSelectCategory={handleSelectCategory}
@@ -255,7 +430,7 @@ export default function Dashboard({ onLogout }) {
                         />
                     )}
 
-                    {view === 'INVENTORY' && (
+                    {activeTab === 'LIVE' && view === 'INVENTORY' && (
                         <InventoryTable
                             items={filteredInventory}
                             categoryName={selectedCategory.label}
