@@ -258,11 +258,11 @@ export const NOTIFICATIONS = [
 ];
 
 export const AUTHORIZED_PERSONS = [
-  { id: 1, name: "Ahmet Yılmaz", title: "Bakım Mühendisi", location: "İzeltaş Torbalı Fabrikası", gsm: "0532 123 45 67", email: "ahmet.yilmaz@izeltas.com.tr" },
-  { id: 2, name: "Mustafa Demir", title: "Üretim Müdürü", location: "İzeltaş Torbalı Fabrikası", gsm: "0533 234 56 78", email: "mustafa.demir@izeltas.com.tr" },
-  { id: 3, name: "Zeynep Kaya", title: "İSG Uzmanı", location: "İzeltaş Torbalı Fabrikası", gsm: "0542 345 67 89", email: "zeynep.kaya@izeltas.com.tr" },
-  { id: 4, name: "Caner Özkan", title: "Baş Mühendis", location: "İzeltaş Işıkkent Fabrikası", gsm: "0530 456 78 90", email: "caner.ozkan@izeltas.com.tr" },
-  { id: 5, name: "Selin Yıldız", title: "İSG Teknisyeni", location: "İzeltaş Işıkkent Fabrikası", gsm: "0555 567 89 01", email: "selin.yildiz@izeltas.com.tr" },
-  { id: 6, name: "Murat Şahin", title: "Bakım Sorumlusu", location: "İzeltaş Pınarbaşı Tesisi", gsm: "0544 678 90 12", email: "murat.sahin@izeltas.com.tr" },
-  { id: 7, name: "Elif Aydın", title: "İSG Uzmanı", location: "İzeltaş Pınarbaşı Tesisi", gsm: "0535 789 01 23", email: "elif.aydin@izeltas.com.tr" }
+  { id: 1, name: "Ahmet Yılmaz", title: "Bakım Mühendisi", location: "İzeltaş Torbalı Fabrikası", department: "Bakım", gsm: "0532 123 45 67", email: "ahmet.yilmaz@izeltas.com.tr" },
+  { id: 2, name: "Mustafa Demir", title: "Üretim Müdürü", location: "İzeltaş Torbalı Fabrikası", department: "Üretim", gsm: "0533 234 56 78", email: "mustafa.demir@izeltas.com.tr" },
+  { id: 3, name: "Zeynep Kaya", title: "İSG Uzmanı", location: "İzeltaş Torbalı Fabrikası", department: "Teknik Emniyet / İSG", gsm: "0542 345 67 89", email: "zeynep.kaya@izeltas.com.tr" },
+  { id: 4, name: "Caner Özkan", title: "Baş Mühendis", location: "İzeltaş Işıkkent Fabrikası", department: "Teknik Hizmetler", gsm: "0530 456 78 90", email: "caner.ozkan@izeltas.com.tr" },
+  { id: 5, name: "Selin Yıldız", title: "İSG Teknisyeni", location: "İzeltaş Işıkkent Fabrikası", department: "Teknik Emniyet / İSG", gsm: "0555 567 89 01", email: "selin.yildiz@izeltas.com.tr" },
+  { id: 6, name: "Murat Şahin", title: "İdari İşler Sorumlusu", location: "İzeltaş Pınarbaşı Tesisi", department: "İdari İşler", gsm: "0544 678 90 12", email: "murat.sahin@izeltas.com.tr" },
+  { id: 7, name: "Elif Aydın", title: "Satın Alma Uzmanı", location: "İzeltaş Pınarbaşı Tesisi", department: "Satın Alma", gsm: "0535 789 01 23", email: "elif.aydin@izeltas.com.tr" }
 ];

@@ -77,11 +77,7 @@ export default function Dashboard({ onLogout }) {
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
-        if (tab === 'OFFICIALS') {
-            setView('LIST');
-        } else {
-            handleGoHome();
-        }
+        handleGoHome();
     };
 
     const handleSelectArchiveYear = (year) => {
@@ -218,8 +214,8 @@ export default function Dashboard({ onLogout }) {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                                 <div
                                     onClick={handleGoHome}
-                                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: (view === 'LOCATIONS' || view === 'LIST') ? 'var(--text-primary)' : 'var(--text-secondary)' }}
-                                    className={(view !== 'LOCATIONS' && view !== 'LIST') ? 'hover-underline' : ''}
+                                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: view === 'LOCATIONS' ? 'var(--text-primary)' : 'var(--text-secondary)' }}
+                                    className={view !== 'LOCATIONS' ? 'hover-underline' : ''}
                                 >
                                     {activeTab === 'LIVE' ? <Home size={16} /> : activeTab === 'ARCHIVE' ? <Archive size={16} /> : <Users size={16} />}
                                     {activeTab === 'LIVE' ? 'Adresler' : activeTab === 'ARCHIVE' ? 'Arşiv' : 'Yetkili Kişiler'}
@@ -231,9 +227,10 @@ export default function Dashboard({ onLogout }) {
                                         <span
                                             onClick={() => {
                                                 if (activeTab === 'LIVE') handleGoToCategories();
-                                                else { setView('YEARS'); setSelectedYear(null); setSelectedDate(null); }
+                                                else if (activeTab === 'ARCHIVE') { setView('YEARS'); setSelectedYear(null); setSelectedDate(null); }
+                                                else { setView('LIST'); }
                                             }}
-                                            style={{ cursor: 'pointer', fontWeight: view === (activeTab === 'LIVE' ? 'CATEGORIES' : 'YEARS') ? '600' : '400', color: view === (activeTab === 'LIVE' ? 'CATEGORIES' : 'YEARS') ? 'var(--text-primary)' : 'inherit' }}
+                                            style={{ cursor: 'pointer', fontWeight: view === (activeTab === 'LIVE' ? 'CATEGORIES' : activeTab === 'ARCHIVE' ? 'YEARS' : 'LIST') ? '600' : '400', color: view === (activeTab === 'LIVE' ? 'CATEGORIES' : activeTab === 'ARCHIVE' ? 'YEARS' : 'LIST') ? 'var(--text-primary)' : 'inherit' }}
                                         >
                                             {selectedLocation.name}
                                         </span>
@@ -402,7 +399,9 @@ export default function Dashboard({ onLogout }) {
                                 locations={LOCATIONS}
                                 onSelectLocation={(loc) => {
                                     setSelectedLocation(loc);
-                                    setView(activeTab === 'LIVE' ? 'CATEGORIES' : 'YEARS');
+                                    if (activeTab === 'LIVE') setView('CATEGORIES');
+                                    else if (activeTab === 'ARCHIVE') setView('YEARS');
+                                    else setView('LIST');
                                 }}
                             />
                             {activeTab === 'LIVE' && (
@@ -524,13 +523,13 @@ export default function Dashboard({ onLogout }) {
                                         <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                                             <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>AD SOYAD</th>
                                             <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>ÜNVAN</th>
-                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>BULUNDUĞU FABRİKA</th>
+                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>BULUNDUĞU BİRİM/BÖLÜM</th>
                                             <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>GSM NO</th>
                                             <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>E-MAIL</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {AUTHORIZED_PERSONS.map(person => (
+                                        {AUTHORIZED_PERSONS.filter(p => p.location === selectedLocation.name).map(person => (
                                             <tr key={person.id} style={{ borderBottom: '1px solid #f1f5f9' }} className="hover-bg-slate-50">
                                                 <td style={{ padding: '16px', fontWeight: '600', fontSize: '0.9rem' }}>{person.name}</td>
                                                 <td style={{ padding: '16px', fontSize: '0.9rem' }}>
@@ -539,8 +538,10 @@ export default function Dashboard({ onLogout }) {
                                                         {person.title}
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: '16px', fontSize: '0.9rem', color: '#64748b' }}>{person.location}</td>
-                                                <td style={{ padding: '16px', fontSize: '0.9rem', color: 'var(--color-primary)', fontWeight: '500' }}>{person.gsm}</td>
+                                                <td style={{ padding: '16px', fontSize: '0.9rem', color: '#64748b' }}>{person.department}</td>
+                                                <td style={{ padding: '16px', fontSize: '0.9rem', color: 'var(--color-primary)', fontWeight: '500' }}>
+                                                    {person.gsm.slice(0, -4)}****
+                                                </td>
                                                 <td style={{ padding: '16px', fontSize: '0.9rem' }}>
                                                     <a href={`mailto:${person.email}`} style={{ color: '#3b82f6', textDecoration: 'none' }}>{person.email}</a>
                                                 </td>
