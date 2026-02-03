@@ -6,8 +6,14 @@ import mmoLogo from '../../assets/mmo_bg.png';
 
 export default function Header({ onLogout }) {
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [showAllNotifications, setShowAllNotifications] = useState(false);
     const notificationRef = useRef(null);
     const newCount = NOTIFICATIONS.filter(n => n.isNew).length;
+
+    // Reset showAll when closing dropdown
+    useEffect(() => {
+        if (!isNotificationsOpen) setShowAllNotifications(false);
+    }, [isNotificationsOpen]);
 
     // Close notifications when clicking outside
     useEffect(() => {
@@ -164,13 +170,13 @@ export default function Header({ onLogout }) {
                                         <div style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
                                             <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)' }}>Bildirimler</h4>
                                         </div>
-                                        <div style={{ maxHeight: '360px', overflowY: 'auto' }}>
+                                        <div style={{ maxHeight: showAllNotifications ? 'none' : '320px', overflowY: 'auto', transition: 'max-height 0.3s' }}>
                                             {NOTIFICATIONS.length === 0 ? (
                                                 <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                                                     Yeni bildirim bulunmuyor.
                                                 </div>
                                             ) : (
-                                                NOTIFICATIONS.map(notif => (
+                                                (showAllNotifications ? NOTIFICATIONS : NOTIFICATIONS.slice(0, 3)).map(notif => (
                                                     <div
                                                         key={notif.id}
                                                         style={{
@@ -184,22 +190,31 @@ export default function Header({ onLogout }) {
                                                     >
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                                                             <span style={{ fontSize: '0.75rem', fontWeight: '700', color: notif.isNew ? 'var(--color-primary)' : 'var(--text-secondary)' }}>
-                                                                {notif.isNew ? '● Yeni Rapor' : 'Rapor Bildirimi'}
+                                                                {notif.isNew && '● '}
+                                                                {notif.type === 'warning' ? '⏰ Süre Uyarısı' :
+                                                                    notif.type === 'survey' ? '📝 Memnuniyet Anketi' :
+                                                                        notif.type === 'contract' ? '📄 Sözleşme Uyarısı' : 'Rapor Bildirimi'}
                                                             </span>
                                                             <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{notif.date}</span>
                                                         </div>
-                                                        <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: '1.4', color: notif.isNew ? '#1e3a8a' : 'var(--text-secondary)' }}>
-                                                            {notif.message}
-                                                        </p>
+                                                        <p
+                                                            style={{ margin: 0, fontSize: '0.85rem', lineHeight: '1.4', color: notif.isNew ? '#1e3a8a' : 'var(--text-secondary)' }}
+                                                            dangerouslySetInnerHTML={{ __html: notif.message }}
+                                                        />
                                                     </div>
                                                 ))
                                             )}
                                         </div>
-                                        <div style={{ padding: '12px', textAlign: 'center', borderTop: '1px solid #f1f5f9' }}>
-                                            <button style={{ border: 'none', background: 'none', color: 'var(--color-primary)', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer' }}>
-                                                Tümünü Gör
-                                            </button>
-                                        </div>
+                                        {!showAllNotifications && NOTIFICATIONS.length > 3 && (
+                                            <div style={{ padding: '12px', textAlign: 'center', borderTop: '1px solid #f1f5f9' }}>
+                                                <button
+                                                    onClick={() => setShowAllNotifications(true)}
+                                                    style={{ border: 'none', background: 'none', color: 'var(--color-primary)', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer' }}
+                                                >
+                                                    Tümünü Gör
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>

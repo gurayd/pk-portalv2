@@ -219,6 +219,27 @@ export const ARCHIVE_INVENTORY = generateArchiveData();
 
 export const NOTIFICATIONS = [
   {
+    id: 3,
+    date: "03.02.2026",
+    message: "İzeltaş Işıkkent adresinde forklift, vinç ve boyler periyodik kontrol sürelerinin bitimine 10 gün kalmıştır.",
+    isNew: true,
+    type: 'warning'
+  },
+  {
+    id: 4,
+    date: "03.02.2026",
+    message: "17.01.2026 tarihinde gerçekleştirilen hava tankı, genleşme tankı periyodik kontrollerine ilişkin görüş ve önerilerinizi lütfen <a href='https://forms.gle/mmo-izeltas-anket' target='_blank' style='color: inherit; text-decoration: underline; font-weight: 700;'>anketimizde</a> belirtiniz.",
+    isNew: true,
+    type: 'survey'
+  },
+  {
+    id: 5,
+    date: "03.02.2026",
+    message: "Önümüzdeki ay sözleşmeniz sona ermektedir. Lütfen Teknik Hizmetler ile iletişime geçiniz.",
+    isNew: true,
+    type: 'contract'
+  },
+  {
     id: 1,
     date: "02.02.2026",
     inspector: "Güray Dinsel",
@@ -232,7 +253,7 @@ export const NOTIFICATIONS = [
     inspector: "Mehmet Ali Akgül",
     location: "İzeltaş Işıkkent Fabrikası",
     message: "28.01.2026 tarihli İzeltaş Işıkkent Fabrikası adresinde Mehmet Ali Akgül tarafından yapılan kontrol raporlarınıza portalda ulaşabilirsiniz.",
-    isNew: false
+    isNew: true
   }
 ];
 
