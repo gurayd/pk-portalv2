@@ -216,3 +216,22 @@ const generateArchiveData = () => {
 };
 
 export const ARCHIVE_INVENTORY = generateArchiveData();
+
+export const NOTIFICATIONS = [
+  {
+    id: 1,
+    date: "02.02.2026",
+    inspector: "Güray Dinsel",
+    location: "İzeltaş Torbalı Fabrikası",
+    message: "02.02.2026 tarihli İzeltaş Torbalı Fabrikası adresinde Güray Dinsel tarafından yapılan kontrol raporlarınıza portalda ulaşabilirsiniz.",
+    isNew: true
+  },
+  {
+    id: 2,
+    date: "28.01.2026",
+    inspector: "Mehmet Ali Akgül",
+    location: "İzeltaş Işıkkent Fabrikası",
+    message: "28.01.2026 tarihli İzeltaş Işıkkent Fabrikası adresinde Mehmet Ali Akgül tarafından yapılan kontrol raporlarınıza portalda ulaşabilirsiniz.",
+    isNew: false
+  }
+];
