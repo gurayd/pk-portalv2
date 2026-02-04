@@ -8,6 +8,7 @@ import CategoryGrid from './CategoryGrid';
 import InventoryTable from './InventoryTable';
 import AnnouncementCarousel from './AnnouncementCarousel';
 import ContactInfo from './ContactInfo';
+import Chatbot from './Chatbot';
 
 // Data
 import { LOCATIONS, CATEGORIES, INVENTORY, ARCHIVE_INVENTORY, SUB_CATEGORIES, AUTHORIZED_PERSONS, CONTRACTS, DEFICIENCY_STATS } from '../../data/mockData';
@@ -1113,6 +1114,7 @@ export default function Dashboard({ onLogout }) {
 
                 </main>
             </Container>
+            <Chatbot />
         </>
     );
 }
