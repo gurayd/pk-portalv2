@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import Container from '../Layout/Container';
 import Header from '../Layout/Header';
 
@@ -25,6 +25,55 @@ export default function Dashboard({ onLogout }) {
     const [selectedStatType, setSelectedStatType] = useState('deficiency_process');
     const [selectedStatCategory, setSelectedStatCategory] = useState('vinc');
     const [statReportNo, setStatReportNo] = useState('');
+    const [selectedEquipmentTypes, setSelectedEquipmentTypes] = useState(['ALL']);
+    const [selectedLocations, setSelectedLocations] = useState(['ALL']);
+    const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+    const [isLocationFilterOpen, setIsLocationFilterOpen] = useState(false);
+    const filterDropdownRef = useRef(null);
+    const locationFilterRef = useRef(null);
+
+    const EQUIPMENT_GROUPS = [
+        {
+            id: 'lifting',
+            label: 'Kaldırma İletme Ekipmanları',
+            types: ['vinc', 'transpalet', 'platform', 'forklift', 'kazici']
+        },
+        {
+            id: 'pressure',
+            label: 'Basınçlı Kaplar',
+            types: ['buhar', 'genlesme', 'sicaksu', 'kompresor', 'boyler']
+        },
+        {
+            id: 'other',
+            label: 'Diğer',
+            types: ['tezgah', 'kapi', 'yangin', 'havalandirma', 'raf', 'ndt']
+        }
+    ];
+
+    const allTypeIds = [...EQUIPMENT_GROUPS.flatMap(g => g.types)];
+
+    const equipmentHistory = useMemo(() => {
+        if (!statReportNo) return null;
+        const current = INVENTORY.find(i => i.reportNo === statReportNo);
+        const archived = ARCHIVE_INVENTORY.find(i => i.reportNo === statReportNo);
+        const targetSerialNo = (current || archived)?.serialNo;
+
+        if (!targetSerialNo) return null;
+
+        const allRecords = [
+            ...INVENTORY.filter(i => i.serialNo === targetSerialNo),
+            ...ARCHIVE_INVENTORY.filter(i => i.serialNo === targetSerialNo)
+        ];
+
+        return allRecords.sort((a, b) => {
+            const dateA = new Date((a.controlDate || '').split('.').reverse().join('-'));
+            const dateB = new Date((b.controlDate || '').split('.').reverse().join('-'));
+            if (isNaN(dateA)) return 1;
+            if (isNaN(dateB)) return -1;
+            return dateB - dateA;
+        });
+    }, [statReportNo]);
+
     const [isDownloadDropdownOpen, setIsDownloadDropdownOpen] = useState(false);
     const downloadDropdownRef = useRef(null);
 
@@ -34,6 +83,12 @@ export default function Dashboard({ onLogout }) {
             if (downloadDropdownRef.current && !downloadDropdownRef.current.contains(event.target)) {
                 setIsDownloadDropdownOpen(false);
             }
+            if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target)) {
+                setIsFilterDropdownOpen(false);
+            }
+            if (locationFilterRef.current && !locationFilterRef.current.contains(event.target)) {
+                setIsLocationFilterOpen(false);
+            }
         }
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -42,7 +97,14 @@ export default function Dashboard({ onLogout }) {
     // Navigation Handlers
     const handleSelectLocation = (loc) => {
         setSelectedLocation(loc);
-        setView('CATEGORIES');
+        if (activeTab === 'LIVE') {
+            setView('INVENTORY');
+            setSelectedEquipmentTypes(['ALL']);
+        } else if (activeTab === 'ARCHIVE') {
+            setView('YEARS');
+        } else {
+            setView('LIST');
+        }
     };
 
     const handleSelectCategory = (cat) => {
@@ -60,12 +122,19 @@ export default function Dashboard({ onLogout }) {
     };
 
     const handleGoHome = () => {
-        setView('LOCATIONS');
-        setSelectedLocation(null);
-        setSelectedCategory(null);
-        setSelectedSubCategory(null);
-        setSelectedYear(null);
-        setSelectedDate(null);
+        if (activeTab === 'LIVE') {
+            setView('INVENTORY');
+            setSelectedLocation(null);
+            setSelectedLocations(['ALL']);
+            setSelectedEquipmentTypes(['ALL']);
+        } else {
+            setView('LOCATIONS');
+            setSelectedLocation(null);
+            setSelectedCategory(null);
+            setSelectedSubCategory(null);
+            setSelectedYear(null);
+            setSelectedDate(null);
+        }
     };
 
     const handleGoToCategories = () => {
@@ -85,8 +154,20 @@ export default function Dashboard({ onLogout }) {
             setView('CONTRACT_LIST');
         } else if (tab === 'STATS') {
             setView('STATS_PAGE');
+        } else if (tab === 'LIVE') {
+            setView('INVENTORY');
+            setSelectedLocation(null);
+            setSelectedLocations(['ALL']);
+            setSelectedEquipmentTypes(['ALL']);
+        } else if (tab === 'ANNOUNCEMENTS') {
+            setView('ANNOUNCEMENTS_VIEW');
         } else {
-            handleGoHome();
+            setView('LOCATIONS');
+            setSelectedLocation(null);
+            setSelectedCategory(null);
+            setSelectedSubCategory(null);
+            setSelectedYear(null);
+            setSelectedDate(null);
         }
     };
 
@@ -113,31 +194,46 @@ export default function Dashboard({ onLogout }) {
 
     // NEW: Download All Excel
     const handleDownloadExcel = () => {
-        if (!selectedLocation) return;
-        const count = INVENTORY.filter(i => i.locationId === selectedLocation.id).length;
-        alert(`'${selectedLocation.name}' için Tüm Envanter Listesi (${count} ekipman) Excel formatında indiriliyor...`);
+        const items = filteredInventory;
+        const count = items.length;
+        const target = selectedLocation ? selectedLocation.name :
+            (selectedLocations.includes('ALL') ? 'Tüm Adresler' : `${selectedLocations.length} Seçili Adres`);
+        alert(`'${target}' için Tüm Envanter Listesi (${count} ekipman) Excel formatında indiriliyor...`);
     };
 
     const handleDownloadAllReports = () => {
-        const locName = selectedLocation ? selectedLocation.name : '';
+        const locName = selectedLocation ? selectedLocation.name :
+            (selectedLocations.includes('ALL') ? 'Tüm Adresler' : `${selectedLocations.length} Seçili Adres`);
         const catName = selectedCategory ? selectedCategory.label : '';
         const target = catName ? `${locName} - ${catName}` : locName;
-        alert(`'${target}' için Tüm Raporlar (PDF/ZIP) hazırlanıyor...`);
+        alert(`'${target}' için Raporlar (PDF/ZIP) hazırlanıyor...`);
         setIsDownloadDropdownOpen(false);
     };
 
     const handleDownloadFilteredReports = (status) => {
-        alert(`'${selectedCategory.label}' kategorisindeki sadece '${status}' raporlar indiriliyor...`);
+        const locName = selectedLocation ? selectedLocation.name :
+            (selectedLocations.includes('ALL') ? 'Tüm Adresler' : `${selectedLocations.length} Seçili Adres`);
+        const catName = selectedCategory ? `(${selectedCategory.label}) ` : '';
+        alert(`'${locName}' lokasyonundaki ${catName}sadece '${status}' olan raporlar indiriliyor...`);
         setIsDownloadDropdownOpen(false);
     };
 
     // Live Filter
-    const filteredInventory = selectedLocation && (selectedSubCategory || selectedCategory)
-        ? INVENTORY.filter(item =>
-            item.locationId === selectedLocation.id &&
-            item.categoryId === (selectedSubCategory ? selectedSubCategory.id : selectedCategory.id)
-        )
-        : [];
+    const filteredInventory = useMemo(() => {
+        let items = [...INVENTORY];
+
+        // Location Filter
+        if (!selectedLocations.includes('ALL')) {
+            items = items.filter(item => selectedLocations.includes(item.locationId));
+        }
+
+        // Equipment Type Filter
+        if (!selectedEquipmentTypes.includes('ALL')) {
+            items = items.filter(item => selectedEquipmentTypes.includes(item.categoryId));
+        }
+
+        return items;
+    }, [selectedLocations, selectedEquipmentTypes]);
 
     // Archive Filter
     const archiveYears = selectedLocation
@@ -164,7 +260,8 @@ export default function Dashboard({ onLogout }) {
                         {/* Tab Switcher */}
                         <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '0', overflowX: 'auto' }}>
                             {[
-                                { id: 'LIVE', label: 'Adresler', icon: <Home size={18} /> },
+                                { id: 'LIVE', label: 'Güncel', icon: <Home size={18} /> },
+                                { id: 'ANNOUNCEMENTS', label: 'Duyurular', icon: <Info size={18} /> },
                                 { id: 'CONTRACTS', label: 'Sözleşmeler', icon: <FileText size={18} /> },
                                 { id: 'ARCHIVE', label: 'Arşiv', icon: <Archive size={18} /> },
                                 { id: 'OFFICIALS', label: 'Yetkili Kişiler', icon: <Users size={18} /> },
@@ -199,18 +296,26 @@ export default function Dashboard({ onLogout }) {
                             {/* Left: Breadcrumbs */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                                 <div
-                                    onClick={handleGoHome}
-                                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: (view === 'LOCATIONS' || view === 'CONTRACT_LIST' || view === 'STATS_PAGE') ? 'var(--text-primary)' : 'var(--text-secondary)' }}
-                                    className={(view !== 'LOCATIONS' && view !== 'CONTRACT_LIST' && view !== 'STATS_PAGE') ? 'hover-underline' : ''}
+                                    onClick={activeTab === 'STATS' ? undefined : handleGoHome}
+                                    style={{
+                                        cursor: activeTab === 'STATS' ? 'default' : 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        color: (view === 'LOCATIONS' || view === 'CONTRACT_LIST' || view === 'STATS_PAGE' || view === 'ANNOUNCEMENTS_VIEW') ? 'var(--text-primary)' : 'var(--text-secondary)'
+                                    }}
+                                    className={(activeTab !== 'STATS' && view !== 'LOCATIONS' && view !== 'CONTRACT_LIST' && view !== 'STATS_PAGE') ? 'hover-underline' : ''}
                                 >
                                     {activeTab === 'LIVE' ? <Home size={16} /> :
-                                        activeTab === 'CONTRACTS' ? <FileText size={16} /> :
-                                            activeTab === 'ARCHIVE' ? <Archive size={16} /> :
-                                                activeTab === 'OFFICIALS' ? <Users size={16} /> : <BarChart3 size={16} />}
-                                    {activeTab === 'LIVE' ? 'Adresler' :
-                                        activeTab === 'CONTRACTS' ? 'Sözleşmeler' :
-                                            activeTab === 'ARCHIVE' ? 'Arşiv' :
-                                                activeTab === 'OFFICIALS' ? 'Yetkili Kişiler' : 'İstatistik'}
+                                        activeTab === 'ANNOUNCEMENTS' ? <Info size={16} /> :
+                                            activeTab === 'CONTRACTS' ? <FileText size={16} /> :
+                                                activeTab === 'ARCHIVE' ? <Archive size={16} /> :
+                                                    activeTab === 'OFFICIALS' ? <Users size={16} /> : <BarChart3 size={16} />}
+                                    {activeTab === 'LIVE' ? 'Güncel' :
+                                        activeTab === 'ANNOUNCEMENTS' ? 'Duyurular' :
+                                            activeTab === 'CONTRACTS' ? 'Sözleşmeler' :
+                                                activeTab === 'ARCHIVE' ? 'Arşiv' :
+                                                    activeTab === 'OFFICIALS' ? 'Yetkili Kişiler' : 'İstatistik'}
                                 </div>
 
                                 {selectedLocation && (
@@ -218,7 +323,7 @@ export default function Dashboard({ onLogout }) {
                                         <ChevronRight size={16} />
                                         <span
                                             onClick={() => {
-                                                if (activeTab === 'LIVE') handleGoToCategories();
+                                                if (activeTab === 'LIVE') handleGoHome();
                                                 else if (activeTab === 'ARCHIVE') { setView('YEARS'); setSelectedYear(null); setSelectedDate(null); }
                                                 else if (activeTab === 'CONTRACTS') { setView('CONTRACT_LIST'); setSelectedContract(null); }
                                                 else { setView('LIST'); }
@@ -251,52 +356,13 @@ export default function Dashboard({ onLogout }) {
                                     </>
                                 )}
 
-                                {activeTab === 'LIVE' && selectedCategory && (
-                                    <>
-                                        <ChevronRight size={16} />
-                                        <span
-                                            onClick={selectedSubCategory ? handleGoToSubCategories : handleGoToCategories}
-                                            style={{ cursor: 'pointer', fontWeight: (view === 'CATEGORIES' || view === 'SUB_CATEGORIES') ? '600' : '400', color: (view === 'CATEGORIES' || view === 'SUB_CATEGORIES') ? 'var(--text-primary)' : 'inherit' }}
-                                        >
-                                            {selectedCategory.label}
-                                        </span>
-                                    </>
-                                )}
-
-                                {activeTab === 'LIVE' && selectedSubCategory && (
-                                    <>
-                                        <ChevronRight size={16} />
-                                        <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
-                                            {selectedSubCategory.label}
-                                        </span>
-                                    </>
-                                )}
+                                {/* Removed Category/SubCategory breadcrumbs for unified view */}
                             </div>
 
                             {/* Right: Actions */}
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                {view === 'CATEGORIES' && (
+                                {(view === 'INVENTORY' || activeTab === 'LIVE' || view === 'CONTRACT_DETAILS') && (
                                     <>
-                                        <button
-                                            onClick={handleDownloadAllReports}
-                                            className="hover-lift"
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '8px',
-                                                backgroundColor: 'var(--color-danger)',
-                                                color: 'white',
-                                                padding: '10px 16px',
-                                                borderRadius: 'var(--radius-md)',
-                                                fontWeight: '600',
-                                                fontSize: '0.9rem',
-                                                boxShadow: 'var(--shadow-sm)'
-                                            }}
-                                        >
-                                            <FileArchive size={18} />
-                                            Tüm raporları indir
-                                        </button>
-
                                         <button
                                             onClick={handleDownloadExcel}
                                             className="hover-lift"
@@ -316,92 +382,84 @@ export default function Dashboard({ onLogout }) {
                                             <FileSpreadsheet size={18} />
                                             İş ekipmanları listesi
                                         </button>
+
+                                        <div style={{ position: 'relative' }} ref={downloadDropdownRef}>
+                                            <button
+                                                onClick={() => setIsDownloadDropdownOpen(!isDownloadDropdownOpen)}
+                                                className="hover-lift"
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    backgroundColor: 'var(--color-primary)',
+                                                    color: 'white',
+                                                    padding: '10px 16px',
+                                                    borderRadius: 'var(--radius-md)',
+                                                    fontWeight: '600',
+                                                    fontSize: '0.9rem',
+                                                    boxShadow: 'var(--shadow-sm)'
+                                                }}
+                                            >
+                                                <Download size={18} />
+                                                Raporları İndir
+                                                <ChevronDown size={16} />
+                                            </button>
+
+                                            {isDownloadDropdownOpen && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    top: '100%',
+                                                    right: 0,
+                                                    marginTop: '8px',
+                                                    backgroundColor: 'white',
+                                                    border: '1px solid #e2e8f0',
+                                                    borderRadius: '8px',
+                                                    boxShadow: 'var(--shadow-lg)',
+                                                    zIndex: 100,
+                                                    minWidth: '220px',
+                                                    overflow: 'hidden'
+                                                }}>
+                                                    <div
+                                                        onClick={handleDownloadAllReports}
+                                                        style={{ padding: '12px 16px', cursor: 'pointer', fontSize: '0.9rem', borderBottom: '1px solid #f1f5f9' }}
+                                                        className="hover-bg-slate-50"
+                                                    >
+                                                        Görüntülenen raporlar
+                                                    </div>
+                                                    <div
+                                                        onClick={() => handleDownloadFilteredReports('Uygun')}
+                                                        style={{ padding: '12px 16px', cursor: 'pointer', fontSize: '0.9rem', borderBottom: '1px solid #f1f5f9' }}
+                                                        className="hover-bg-slate-50"
+                                                    >
+                                                        Uygun Raporlar
+                                                    </div>
+                                                    <div
+                                                        onClick={() => handleDownloadFilteredReports('Sakıncalı')}
+                                                        style={{ padding: '12px 16px', cursor: 'pointer', fontSize: '0.9rem' }}
+                                                        className="hover-bg-slate-50"
+                                                    >
+                                                        Sakıncalı Raporlar
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </>
-                                )}
-
-                                {view === 'INVENTORY' && (
-                                    <div style={{ position: 'relative' }} ref={downloadDropdownRef}>
-                                        <button
-                                            onClick={() => setIsDownloadDropdownOpen(!isDownloadDropdownOpen)}
-                                            className="hover-lift"
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '8px',
-                                                backgroundColor: 'var(--color-primary)',
-                                                color: 'white',
-                                                padding: '10px 16px',
-                                                borderRadius: 'var(--radius-md)',
-                                                fontWeight: '600',
-                                                fontSize: '0.9rem',
-                                                boxShadow: 'var(--shadow-sm)'
-                                            }}
-                                        >
-                                            <Download size={18} />
-                                            Raporları İndir
-                                            <ChevronDown size={16} />
-                                        </button>
-
-                                        {isDownloadDropdownOpen && (
-                                            <div style={{
-                                                position: 'absolute',
-                                                top: '100%',
-                                                right: 0,
-                                                marginTop: '8px',
-                                                backgroundColor: 'white',
-                                                border: '1px solid #e2e8f0',
-                                                borderRadius: '8px',
-                                                boxShadow: 'var(--shadow-lg)',
-                                                zIndex: 100,
-                                                minWidth: '220px',
-                                                overflow: 'hidden'
-                                            }}>
-                                                <div
-                                                    onClick={() => handleDownloadFilteredReports('Sakıncalı')}
-                                                    style={{ padding: '12px 16px', cursor: 'pointer', fontSize: '0.9rem', borderBottom: '1px solid #f1f5f9' }}
-                                                    className="hover-bg-slate-50"
-                                                >
-                                                    Sakıncalı raporları indir
-                                                </div>
-                                                <div
-                                                    onClick={() => handleDownloadFilteredReports('Uygun')}
-                                                    style={{ padding: '12px 16px', cursor: 'pointer', fontSize: '0.9rem', borderBottom: '1px solid #f1f5f9' }}
-                                                    className="hover-bg-slate-50"
-                                                >
-                                                    Uygun raporları indir
-                                                </div>
-                                                <div
-                                                    onClick={handleDownloadAllReports}
-                                                    style={{ padding: '12px 16px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600' }}
-                                                    className="hover-bg-slate-50"
-                                                >
-                                                    Tüm raporları indir
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
                                 )}
                             </div>
                         </div>
                     </div>
 
                     {/* Content Views */}
-                    {view === 'LOCATIONS' && (
+                    {view === 'LOCATIONS' && activeTab !== 'LIVE' && (
                         <>
                             <LocationList
                                 locations={LOCATIONS}
                                 onSelectLocation={(loc) => {
                                     setSelectedLocation(loc);
-                                    if (activeTab === 'LIVE') setView('CATEGORIES');
-                                    else if (activeTab === 'ARCHIVE') setView('YEARS');
+                                    if (activeTab === 'ARCHIVE') setView('YEARS');
                                     else setView('LIST');
                                 }}
                             />
-                            {activeTab === 'LIVE' && (
-                                <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
-                                    <AnnouncementCarousel />
-                                </div>
-                            )}
                         </>
                     )}
 
@@ -469,30 +527,246 @@ export default function Dashboard({ onLogout }) {
                     )}
 
                     {/* LIVE SPECIFIC VIEWS */}
-                    {activeTab === 'LIVE' && view === 'CATEGORIES' && (
-                        <CategoryGrid
-                            categories={CATEGORIES}
-                            onSelectCategory={handleSelectCategory}
-                            inventory={INVENTORY}
-                            selectedLocationId={selectedLocation.id}
-                        />
+
+
+                    {activeTab === 'LIVE' && (view === 'INVENTORY' || view === 'LOCATIONS' || view === 'CATEGORIES' || view === 'SUB_CATEGORIES') && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            {/* Unified Global Table with Filters */}
+                            <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                                {/* Location Filter */}
+                                <div style={{ position: 'relative', width: '300px' }} ref={locationFilterRef}>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>Adres / Lokasyon Seçimi</label>
+                                    <div
+                                        onClick={() => setIsLocationFilterOpen(!isLocationFilterOpen)}
+                                        style={{
+                                            padding: '12px 16px',
+                                            backgroundColor: 'white',
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: '12px',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                                        }}
+                                    >
+                                        <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {selectedLocations.includes('ALL')
+                                                ? 'Tüm Adresler'
+                                                : `${selectedLocations.length} Adres Seçili`}
+                                        </span>
+                                        <ChevronDown size={18} color="#94a3b8" />
+                                    </div>
+
+                                    {isLocationFilterOpen && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '100%',
+                                            left: 0,
+                                            right: 0,
+                                            marginTop: '8px',
+                                            backgroundColor: 'white',
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: '12px',
+                                            boxShadow: 'var(--shadow-lg)',
+                                            zIndex: 110,
+                                            padding: '12px'
+                                        }}>
+                                            <div
+                                                onClick={() => setSelectedLocations(['ALL'])}
+                                                style={{ padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', backgroundColor: selectedLocations.includes('ALL') ? '#eff6ff' : 'transparent' }}
+                                            >
+                                                <div style={{ width: '18px', height: '18px', border: '2px solid var(--color-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: selectedLocations.includes('ALL') ? 'var(--color-primary)' : 'transparent' }}>
+                                                    {selectedLocations.includes('ALL') && <Check size={14} color="white" />}
+                                                </div>
+                                                <span style={{ fontWeight: '700' }}>Tüm Adresler</span>
+                                            </div>
+                                            {LOCATIONS.map(loc => {
+                                                const isSelected = selectedLocations.includes(loc.id);
+                                                return (
+                                                    <div
+                                                        key={loc.id}
+                                                        onClick={() => {
+                                                            let newLocs = selectedLocations.filter(id => id !== 'ALL');
+                                                            if (isSelected) {
+                                                                newLocs = newLocs.filter(id => id !== loc.id);
+                                                            } else {
+                                                                newLocs = [...newLocs, loc.id];
+                                                            }
+                                                            if (newLocs.length === 0 || newLocs.length === LOCATIONS.length) {
+                                                                setSelectedLocations(['ALL']);
+                                                            } else {
+                                                                setSelectedLocations(newLocs);
+                                                            }
+                                                        }}
+                                                        style={{ padding: '8px 10px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: isSelected ? '#eff6ff' : 'transparent' }}
+                                                    >
+                                                        <div style={{ width: '16px', height: '16px', border: '1px solid #cbd5e1', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent', borderColor: isSelected ? 'var(--color-primary)' : '#cbd5e1' }}>
+                                                            {isSelected && <Check size={12} color="white" />}
+                                                        </div>
+                                                        <span style={{ fontSize: '0.85rem' }}>{loc.name}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                                <div style={{ position: 'relative', width: '350px' }} ref={filterDropdownRef}>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>Ekipman Türü Seçimi</label>
+                                    <div
+                                        onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                                        style={{
+                                            padding: '12px 16px',
+                                            backgroundColor: 'white',
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: '12px',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                                        }}
+                                    >
+                                        <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {selectedEquipmentTypes.includes('ALL')
+                                                ? 'Tüm Ekipmanlar'
+                                                : `${selectedEquipmentTypes.length} Ekipman Türü Seçili`}
+                                        </span>
+                                        <ChevronDown size={18} color="#94a3b8" />
+                                    </div>
+
+                                    {isFilterDropdownOpen && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '100%',
+                                            left: 0,
+                                            right: 0,
+                                            marginTop: '8px',
+                                            backgroundColor: 'white',
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: '12px',
+                                            boxShadow: 'var(--shadow-lg)',
+                                            zIndex: 100,
+                                            maxHeight: '450px',
+                                            overflowY: 'auto',
+                                            padding: '12px'
+                                        }}>
+                                            {/* All Option */}
+                                            <div
+                                                onClick={() => setSelectedEquipmentTypes(['ALL'])}
+                                                style={{ padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', backgroundColor: selectedEquipmentTypes.includes('ALL') ? '#eff6ff' : 'transparent' }}
+                                                className="hover-bg-slate-50"
+                                            >
+                                                <div style={{ width: '18px', height: '18px', border: '2px solid var(--color-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: selectedEquipmentTypes.includes('ALL') ? 'var(--color-primary)' : 'transparent' }}>
+                                                    {selectedEquipmentTypes.includes('ALL') && <Check size={14} color="white" />}
+                                                </div>
+                                                <span style={{ fontWeight: '700', color: selectedEquipmentTypes.includes('ALL') ? 'var(--color-primary)' : 'inherit' }}>Tüm Ekipmanlar</span>
+                                            </div>
+
+                                            {EQUIPMENT_GROUPS.map(group => {
+                                                const groupTypes = group.types;
+                                                const isGroupSelected = groupTypes.every(t => selectedEquipmentTypes.includes(t));
+
+                                                return (
+                                                    <div key={group.id} style={{ marginBottom: '16px' }}>
+                                                        {/* Main Group Header */}
+                                                        <div
+                                                            onClick={() => {
+                                                                let newSelection = selectedEquipmentTypes.filter(t => t !== 'ALL');
+                                                                if (isGroupSelected) {
+                                                                    newSelection = newSelection.filter(t => !groupTypes.includes(t));
+                                                                } else {
+                                                                    newSelection = [...new Set([...newSelection, ...groupTypes])];
+                                                                }
+                                                                if (newSelection.length === 0 || newSelection.length === allTypeIds.length) {
+                                                                    setSelectedEquipmentTypes(['ALL']);
+                                                                } else {
+                                                                    setSelectedEquipmentTypes(newSelection);
+                                                                }
+                                                            }}
+                                                            style={{
+                                                                padding: '8px 10px',
+                                                                backgroundColor: '#f8fafc',
+                                                                borderRadius: '8px',
+                                                                marginBottom: '8px',
+                                                                cursor: 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '10px'
+                                                            }}
+                                                            className="hover-bg-slate-100"
+                                                        >
+                                                            <div style={{ width: '18px', height: '18px', border: '2px solid #cbd5e1', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isGroupSelected ? 'var(--color-primary)' : 'transparent', borderColor: isGroupSelected ? 'var(--color-primary)' : '#cbd5e1' }}>
+                                                                {isGroupSelected && <Check size={14} color="white" />}
+                                                            </div>
+                                                            <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#475569' }}>{group.label}</span>
+                                                        </div>
+
+                                                        {/* Sub types */}
+                                                        <div style={{ paddingLeft: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                            {group.types.map(typeId => {
+                                                                const category = CATEGORIES.find(c => c.id === typeId) || SUB_CATEGORIES.find(s => s.id === typeId);
+                                                                if (!category) return null;
+                                                                const isSelected = selectedEquipmentTypes.includes(typeId);
+
+                                                                return (
+                                                                    <div
+                                                                        key={typeId}
+                                                                        onClick={() => {
+                                                                            let newSelection = selectedEquipmentTypes.filter(t => t !== 'ALL');
+                                                                            if (isSelected) {
+                                                                                newSelection = newSelection.filter(t => t !== typeId);
+                                                                            } else {
+                                                                                newSelection = [...newSelection, typeId];
+                                                                            }
+                                                                            if (newSelection.length === 0 || newSelection.length === allTypeIds.length) {
+                                                                                setSelectedEquipmentTypes(['ALL']);
+                                                                            } else {
+                                                                                setSelectedEquipmentTypes(newSelection);
+                                                                            }
+                                                                        }}
+                                                                        style={{
+                                                                            padding: '6px 10px',
+                                                                            borderRadius: '6px',
+                                                                            cursor: 'pointer',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '10px'
+                                                                        }}
+                                                                        className="hover-bg-slate-50"
+                                                                    >
+                                                                        <div style={{ width: '16px', height: '16px', border: '1px solid #cbd5e1', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent', borderColor: isSelected ? 'var(--color-primary)' : '#cbd5e1' }}>
+                                                                            {isSelected && <Check size={12} color="white" />}
+                                                                        </div>
+                                                                        <span style={{ fontSize: '0.85rem', color: isSelected ? 'var(--text-primary)' : '#64748b' }}>{category.label}</span>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <InventoryTable
+                                items={filteredInventory}
+                                categoryName="Güncel Ekipman Listesi"
+                                onDownload={handleDownload}
+                            />
+                        </div>
                     )}
 
-                    {activeTab === 'LIVE' && view === 'SUB_CATEGORIES' && (
-                        <CategoryGrid
-                            categories={SUB_CATEGORIES.filter(s => s.parentId === selectedCategory.id)}
-                            onSelectCategory={handleSelectSubCategory}
-                            inventory={INVENTORY}
-                            selectedLocationId={selectedLocation.id}
-                        />
-                    )}
-
-                    {activeTab === 'LIVE' && view === 'INVENTORY' && (
-                        <InventoryTable
-                            items={filteredInventory}
-                            categoryName={selectedSubCategory ? selectedSubCategory.label : selectedCategory.label}
-                            onDownload={handleDownload}
-                        />
+                    {/* ANNOUNCEMENTS VIEW */}
+                    {activeTab === 'ANNOUNCEMENTS' && (
+                        <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+                            <div style={{ marginBottom: '24px' }}>
+                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>MMO tarafından paylaşılan güncel bilgilendirmeler.</p>
+                            </div>
+                            <AnnouncementCarousel />
+                        </div>
                     )}
 
                     {/* CONTRACTS VIEW */}
@@ -703,23 +977,64 @@ export default function Dashboard({ onLogout }) {
                                             </button>
                                         </div>
 
-                                        {/* Mock Chart Area */}
-                                        <div style={{ height: '300px', width: '100%', backgroundColor: '#f8fafc', borderRadius: '16px', border: '2px dashed #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        {/* History Results Area */}
+                                        <div style={{ minHeight: '300px', width: '100%', backgroundColor: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                                             {!statReportNo ? (
-                                                <div style={{ textAlign: 'center', color: '#94a3b8' }}>
+                                                <div style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
                                                     <BarChart3 size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
-                                                    <p style={{ margin: 0, fontWeight: '500' }}>Grafiği görüntülemek için bir rapor numarası girin.</p>
+                                                    <p style={{ margin: 0, fontWeight: '500' }}>Verileri listelemek için bir rapor numarası girin.</p>
+                                                </div>
+                                            ) : !equipmentHistory || equipmentHistory.length === 0 ? (
+                                                <div style={{ padding: '60px', textAlign: 'center', color: 'var(--color-danger)' }}>
+                                                    <p style={{ margin: 0, fontWeight: '600' }}>Rapor numarası bulunamadı veya eşleşen veri yok.</p>
                                                 </div>
                                             ) : (
-                                                <div style={{ width: '100%', padding: '40px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                                    <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--color-primary)' }}>{statReportNo} - Teknik Durum Gelişimi</h4>
-                                                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '30px', height: '180px', paddingBottom: '20px', borderBottom: '1px solid #e2e8f0' }}>
-                                                        {[80, 40, 95, 20].map((h, i) => (
-                                                            <div key={i} style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                                                <div style={{ width: '40px', height: `${h}%`, backgroundColor: i === 3 ? 'var(--color-primary)' : '#cbd5e1', borderRadius: '8px 8px 0 0', transition: 'height 1s ease-out' }} />
-                                                                <span style={{ position: 'absolute', top: '100%', marginTop: '8px', fontSize: '0.75rem', fontWeight: '600', color: '#64748b' }}>Şub '2{3 + i}</span>
-                                                            </div>
-                                                        ))}
+                                                <div style={{ width: '100%' }}>
+                                                    <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                                        <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--color-primary)' }}>
+                                                            Ekipman Geçmişi: {equipmentHistory[0].name} ({equipmentHistory[0].serialNo})
+                                                        </h4>
+                                                    </div>
+                                                    <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                                            <thead>
+                                                                <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #e2e8f0' }}>
+                                                                    <th style={{ padding: '12px 20px', fontSize: '0.8rem', fontWeight: '700', color: '#64748b' }}>KONTROL TARİHİ</th>
+                                                                    <th style={{ padding: '12px 20px', fontSize: '0.8rem', fontWeight: '700', color: '#64748b' }}>RAPOR NO</th>
+                                                                    <th style={{ padding: '12px 20px', fontSize: '0.8rem', fontWeight: '700', color: '#64748b' }}>TESPİT EDİLEN EKSİKLİKLER</th>
+                                                                    <th style={{ padding: '12px 20px', fontSize: '0.8rem', fontWeight: '700', color: '#64748b' }}>DURUM</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {equipmentHistory.map((h, idx) => (
+                                                                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                                                        <td style={{ padding: '16px 20px', fontSize: '0.9rem', fontWeight: '600' }}>{h.controlDate}</td>
+                                                                        <td style={{ padding: '16px 20px', fontSize: '0.85rem', color: '#64748b', fontFamily: 'monospace' }}>{h.reportNo}</td>
+                                                                        <td style={{ padding: '16px 20px' }}>
+                                                                            {h.deficiencies.length > 0 ? (
+                                                                                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.85rem', color: 'var(--color-danger)' }}>
+                                                                                    {h.deficiencies.map((d, i) => <li key={i} style={{ marginBottom: '4px' }}>{d}</li>)}
+                                                                                </ul>
+                                                                            ) : (
+                                                                                <span style={{ fontSize: '0.85rem', color: 'var(--color-success)', fontWeight: '600' }}>✓ Eksiklik tespit edilmedi.</span>
+                                                                            )}
+                                                                        </td>
+                                                                        <td style={{ padding: '16px 20px' }}>
+                                                                            <span style={{
+                                                                                padding: '4px 10px',
+                                                                                borderRadius: '20px',
+                                                                                fontSize: '0.75rem',
+                                                                                fontWeight: '700',
+                                                                                backgroundColor: h.reportStatus === 'Uygun' ? '#dcfce7' : '#fee2e2',
+                                                                                color: h.reportStatus === 'Uygun' ? '#166534' : '#991b1b'
+                                                                            }}>
+                                                                                {h.reportStatus}
+                                                                            </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
                                                     </div>
                                                 </div>
                                             )}
@@ -785,7 +1100,7 @@ export default function Dashboard({ onLogout }) {
                                                     </div>
                                                     <div>
                                                         <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--color-success)' }}>%88</div>
-                                                        <div style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8' }}>İyileşme Oranı</div>
+                                                        <div style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8' }}>Ekipman Uygunluk Oranı</div>
                                                     </div>
                                                 </div>
                                             </div>

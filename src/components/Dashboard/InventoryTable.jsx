@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Download, CheckCircle, AlertTriangle, ArrowUpDown, Filter, X, Copy, Check } from 'lucide-react';
+import { Download, CheckCircle, AlertTriangle, ArrowUpDown, Filter, X, Copy, Check, Eye } from 'lucide-react';
 
 export default function InventoryTable({ items, categoryName, onDownload }) {
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
@@ -126,12 +126,12 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
         return result;
     }, [items, sortConfig, activeFilters]);
 
-    const renderHeaderCell = (label, sortKey, filterKey = null) => {
+    const renderHeaderCell = (label, sortKey, filterKey = null, minWidth = '120px') => {
         const isSorted = sortConfig.key === sortKey;
         const isFiltered = filterKey && activeFilters[filterKey];
 
         return (
-            <th style={{ padding: '16px', whiteSpace: 'nowrap', position: 'relative' }}>
+            <th style={{ padding: '12px 16px', whiteSpace: 'nowrap', position: 'relative', minWidth: minWidth }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
                     <div onClick={() => handleSort(sortKey)} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <span style={{ fontWeight: '700', color: isSorted ? 'var(--color-primary)' : 'inherit' }}>{label}</span>
@@ -211,21 +211,21 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                     <thead>
                         <tr style={{ backgroundColor: '#f1f5f9', color: 'var(--text-secondary)', textAlign: 'left' }}>
-                            <th style={{ padding: '16px', fontWeight: '700', textAlign: 'center' }}>Rapor No</th>
-                            {renderHeaderCell("Marka / Seri No", "brand")}
-                            <th style={{ padding: '16px', fontWeight: '600' }}>Kapasite</th>
-                            {renderHeaderCell("Bulunduğu Yer", "place", "place")}
-                            <th style={{ padding: '16px', fontWeight: '600', whiteSpace: 'pre-line' }}>Kontrol Tarihleri{"\n"}(Son / Gelecek)</th>
-                            {renderHeaderCell("Kalan Gün", "daysRemaining")}
-                            <th style={{ padding: '16px', fontWeight: '600', width: '300px' }}>Eksiklikler</th>
-                            {renderHeaderCell("Sonuç", "reportStatus", "reportStatus")}
-                            <th style={{ padding: '16px', fontWeight: '600' }}>Periyodik Kontrol Raporu</th>
+                            <th style={{ padding: '12px 16px', fontWeight: '700', textAlign: 'center', width: '80px' }}>Rapor No</th>
+                            {renderHeaderCell("Ekipman / Marka / Seri No", "brand", null, "220px")}
+                            <th style={{ padding: '12px 16px', fontWeight: '600', minWidth: '100px' }}>Kapasite</th>
+                            {renderHeaderCell("Bulunduğu Yer", "place", "place", "160px")}
+                            <th style={{ padding: '12px 16px', fontWeight: '600', whiteSpace: 'pre-line', minWidth: '130px' }}>Kontrol Tarihleri{"\n"}(Son / Gelecek)</th>
+                            {renderHeaderCell("Kalan Gün", "daysRemaining", null, "100px")}
+                            <th style={{ padding: '12px 16px', fontWeight: '600', minWidth: '250px' }}>Eksiklikler</th>
+                            {renderHeaderCell("Sonuç", "reportStatus", "reportStatus", "140px")}
+                            <th style={{ padding: '12px 16px', fontWeight: '600', minWidth: '120px' }}>Rapor</th>
                         </tr>
                     </thead>
                     <tbody>
                         {processedItems.length === 0 ? (
                             <tr>
-                                <td colSpan="10" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                                <td colSpan="9" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                                     {items.length === 0 ? "Bu kategoride kayıtlı ekipman bulunamadı." : "Filtreleme sonucunda kayıt bulunamadı."}
                                 </td>
                             </tr>
@@ -257,8 +257,9 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
                                         </td>
                                         <td style={{ padding: '16px' }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{item.brand}</span>
-                                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{item.serialNo}</span>
+                                                <span style={{ fontWeight: '700', color: 'var(--color-primary)', fontSize: '0.9rem' }}>{item.name}</span>
+                                                <span style={{ fontWeight: '500', color: 'var(--text-primary)', fontSize: '0.85rem' }}>{item.brand}</span>
+                                                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontFamily: 'monospace' }}>{item.serialNo}</span>
                                             </div>
                                         </td>
                                         <td style={{ padding: '16px', color: 'var(--text-secondary)' }}>{item.capacity || '-'}</td>
@@ -289,24 +290,51 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
                                                 <span>{statusInfo.text}</span>
                                             </div>
                                         </td>
-                                        <td style={{ padding: '16px' }}>
-                                            <button
-                                                onClick={() => onDownload(item.id)}
-                                                className="hover-lift"
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '8px',
-                                                    padding: '8px 12px',
-                                                    backgroundColor: 'var(--color-primary)',
-                                                    color: 'white',
-                                                    borderRadius: 'var(--radius-md)',
-                                                    fontSize: '0.85rem',
-                                                    fontWeight: '500'
-                                                }}
-                                            >
-                                                <Download size={14} /> İndir
-                                            </button>
+                                        <td style={{ padding: '12px 16px', width: '120px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                <button
+                                                    onClick={() => alert(`Rapor (ID: ${item.id}) görüntüleniyor...`)}
+                                                    className="hover-lift"
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '6px',
+                                                        padding: '6px 10px',
+                                                        backgroundColor: '#475569',
+                                                        color: 'white',
+                                                        borderRadius: '6px',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: '600',
+                                                        border: 'none',
+                                                        cursor: 'pointer',
+                                                        whiteSpace: 'nowrap'
+                                                    }}
+                                                >
+                                                    <Eye size={12} /> Görüntüle
+                                                </button>
+                                                <button
+                                                    onClick={() => onDownload(item.id)}
+                                                    className="hover-lift"
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '6px',
+                                                        padding: '6px 10px',
+                                                        backgroundColor: 'var(--color-primary)',
+                                                        color: 'white',
+                                                        borderRadius: '6px',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: '600',
+                                                        border: 'none',
+                                                        cursor: 'pointer',
+                                                        whiteSpace: 'nowrap'
+                                                    }}
+                                                >
+                                                    <Download size={12} /> İndir
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 )

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import genelKurulImg from '../../assets/announce_genel_kurul.jpg';
+import qrCodeNewsImg from '../../assets/qr_code_news.png';
 
 const SLIDES = [
     {
@@ -20,7 +21,7 @@ const SLIDES = [
         title: "MMO’dan Yeni Hizmet: Periyodik Kontrol Raporlarına QR Kod ile Anında Erişim",
         description: "Periyodik kontrol raporlarınıza artık QR kod ile anında erişebilirsiniz. Detaylar için tıklayınız.",
         link: "https://ankara.mmo.org.tr/izmir/haber/mmodan-yeni-hizmet-periyodik-kontrol-raporlarina-qr-kod-ile-aninda-erisim",
-        image: "https://ankara.mmo.org.tr/sites/ankara.mmo.org.tr/files/425a810b-aa8a-49c0-9904-7a9159d33a6f.jpg" // Using a generic placeholder or the actual one if accessible
+        image: qrCodeNewsImg
     }
 ];
 
@@ -47,10 +48,7 @@ export default function AnnouncementCarousel() {
             boxShadow: 'var(--shadow-md)',
             position: 'relative'
         }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-                    Duyurular
-                </h3>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '16px' }}>
                 <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                     {currentIndex + 1} / {SLIDES.length}
                 </div>
@@ -120,18 +118,21 @@ export default function AnnouncementCarousel() {
                                 width: '100%',
                                 height: '100%',
                                 padding: '40px',
-                                backgroundColor: '#f8fafc',
+                                backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(${currentSlide.image})`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 textAlign: 'center',
-                                gap: '20px'
+                                gap: '20px',
+                                color: 'white'
                             }}>
-                                <h4 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--color-primary)' }}>
+                                <h4 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#fff' }}>
                                     {currentSlide.title}
                                 </h4>
-                                <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', maxWidth: '800px' }}>
+                                <p style={{ fontSize: '1.1rem', color: 'rgba(255, 255, 255, 0.9)', maxWidth: '800px' }}>
                                     {currentSlide.description}
                                 </p>
                                 <a
