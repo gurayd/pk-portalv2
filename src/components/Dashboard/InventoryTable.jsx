@@ -1,12 +1,19 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Download, CheckCircle, AlertTriangle, ArrowUpDown, Filter, X } from 'lucide-react';
+import { Download, CheckCircle, AlertTriangle, ArrowUpDown, Filter, X, Copy, Check } from 'lucide-react';
 
 export default function InventoryTable({ items, categoryName, onDownload }) {
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-    const [activeFilters, setActiveFilters] = useState({}); // { place: ['Depo A', 'Depo B'], reportStatus: ['Kusurlu'] }
-    const [openFilter, setOpenFilter] = useState(null); // 'place' | 'reportStatus' | null
+    const [activeFilters, setActiveFilters] = useState({});
+    const [openFilter, setOpenFilter] = useState(null);
+    const [copiedId, setCopiedId] = useState(null);
 
     const filterRef = useRef(null);
+
+    const handleCopy = (text, id) => {
+        navigator.clipboard.writeText(text);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+    };
 
     // Close filter dropdown when clicking outside
     useEffect(() => {
@@ -40,7 +47,6 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
         return Math.floor(diffTime / (1000 * 60 * 60 * 24));
     };
 
-    // --- SORTING LOGIC ---
     const handleSort = (key) => {
         let direction = 'asc';
         if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -49,7 +55,6 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
         setSortConfig({ key, direction });
     };
 
-    // --- FILTER LOGIC ---
     const toggleFilterMenu = (key) => {
         setOpenFilter(openFilter === key ? null : key);
     };
@@ -75,9 +80,8 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
             const { [key]: unused, ...rest } = prev;
             return rest;
         });
-    }
+    };
 
-    // --- DATA PROCESSING ---
     const uniqueValues = useMemo(() => {
         return {
             place: [...new Set(items.map(i => i.place))].sort(),
@@ -88,27 +92,23 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
     const processedItems = useMemo(() => {
         let result = [...items];
 
-        // 1. Filtering
         Object.keys(activeFilters).forEach(key => {
             if (activeFilters[key] && activeFilters[key].length > 0) {
                 result = result.filter(item => activeFilters[key].includes(item[key]));
             }
         });
 
-        // 2. Sorting
         if (sortConfig.key) {
             result.sort((a, b) => {
                 let aValue = a[sortConfig.key];
                 let bValue = b[sortConfig.key];
 
-                // Custom Sort Logic for specific columns
                 if (sortConfig.key === 'daysRemaining') {
                     aValue = getDaysRemaining(a.nextControlDate);
                     bValue = getDaysRemaining(b.nextControlDate);
                     return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
                 }
 
-                // Generic String Sort
                 if (typeof aValue === 'string' && typeof bValue === 'string') {
                     return sortConfig.direction === 'asc'
                         ? aValue.localeCompare(bValue, 'tr')
@@ -126,8 +126,6 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
         return result;
     }, [items, sortConfig, activeFilters]);
 
-
-    // --- RENDER HELPERS ---
     const renderHeaderCell = (label, sortKey, filterKey = null) => {
         const isSorted = sortConfig.key === sortKey;
         const isFiltered = filterKey && activeFilters[filterKey];
@@ -135,14 +133,10 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
         return (
             <th style={{ padding: '16px', whiteSpace: 'nowrap', position: 'relative' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
-
-                    {/* Label & Sort */}
                     <div onClick={() => handleSort(sortKey)} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <span style={{ fontWeight: '700', color: isSorted ? 'var(--color-primary)' : 'inherit' }}>{label}</span>
                         <ArrowUpDown size={14} color={isSorted ? 'var(--color-primary)' : '#cbd5e1'} />
                     </div>
-
-                    {/* Filter Trigger */}
                     {filterKey && (
                         <div
                             onClick={(e) => { e.stopPropagation(); toggleFilterMenu(filterKey); }}
@@ -158,7 +152,6 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
                     )}
                 </div>
 
-                {/* Filter Dropdown */}
                 {filterKey && openFilter === filterKey && (
                     <div
                         ref={filterRef}
@@ -208,30 +201,31 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
             borderRadius: 'var(--radius-xl)',
             boxShadow: 'var(--shadow-sm)',
             border: '1px solid #e2e8f0',
-            overflow: 'visible' // Allow dropdowns to overflow if needed, though they are usually inside container
+            overflow: 'visible'
         }}>
             <div style={{ padding: '20px', borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: '700' }}>{categoryName} Envanter Listesi</h3>
             </div>
 
-            <div style={{ overflowX: 'auto', minHeight: '400px' }}> {/* Min height to allow sorting dropdown space if list empty */}
+            <div style={{ overflowX: 'auto', minHeight: '400px' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                     <thead>
                         <tr style={{ backgroundColor: '#f1f5f9', color: 'var(--text-secondary)', textAlign: 'left' }}>
+                            <th style={{ padding: '16px', fontWeight: '700', textAlign: 'center' }}>Rapor No</th>
                             {renderHeaderCell("Marka / Seri No", "brand")}
-                            {renderHeaderCell("Bulunduğu Yer", "place", "place")} {/* Sorter + Filter */}
-                            <th style={{ padding: '16px', fontWeight: '600' }}>Son Kontrol</th>
-                            <th style={{ padding: '16px', fontWeight: '600' }}>Gelecek Kontrol</th>
-                            {renderHeaderCell("Kalan Gün", "daysRemaining")} {/* Only Sort */}
+                            <th style={{ padding: '16px', fontWeight: '600' }}>Kapasite</th>
+                            {renderHeaderCell("Bulunduğu Yer", "place", "place")}
+                            <th style={{ padding: '16px', fontWeight: '600', whiteSpace: 'pre-line' }}>Kontrol Tarihleri{"\n"}(Son / Gelecek)</th>
+                            {renderHeaderCell("Kalan Gün", "daysRemaining")}
                             <th style={{ padding: '16px', fontWeight: '600', width: '300px' }}>Eksiklikler</th>
-                            {renderHeaderCell("Sonuç", "reportStatus", "reportStatus")} {/* Sorter + Filter */}
+                            {renderHeaderCell("Sonuç", "reportStatus", "reportStatus")}
                             <th style={{ padding: '16px', fontWeight: '600' }}>Periyodik Kontrol Raporu</th>
                         </tr>
                     </thead>
                     <tbody>
                         {processedItems.length === 0 ? (
                             <tr>
-                                <td colSpan="8" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                                <td colSpan="10" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                                     {items.length === 0 ? "Bu kategoride kayıtlı ekipman bulunamadı." : "Filtreleme sonucunda kayıt bulunamadı."}
                                 </td>
                             </tr>
@@ -244,22 +238,37 @@ export default function InventoryTable({ items, categoryName, onDownload }) {
                                 if (daysRemaining < 0) {
                                     countdownStyle.color = 'var(--color-danger)';
                                 } else if (daysRemaining < 10) {
-                                    countdownStyle.color = '#eab308'; // Warning Yellow
+                                    countdownStyle.color = '#eab308';
                                 } else {
                                     countdownStyle.color = 'var(--color-success)';
                                 }
 
                                 return (
                                     <tr key={item.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                                            <button
+                                                onClick={() => handleCopy(item.reportNo, item.id)}
+                                                style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '8px', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                                                className="hover-bg-slate-100"
+                                                title="Rapor Numarasını Kopyala"
+                                            >
+                                                {copiedId === item.id ? <Check size={18} color="var(--color-success)" /> : <Copy size={18} color="var(--color-primary)" />}
+                                            </button>
+                                        </td>
                                         <td style={{ padding: '16px' }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{item.brand}</span>
                                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{item.serialNo}</span>
                                             </div>
                                         </td>
+                                        <td style={{ padding: '16px', color: 'var(--text-secondary)' }}>{item.capacity || '-'}</td>
                                         <td style={{ padding: '16px' }}>{item.place}</td>
-                                        <td style={{ padding: '16px', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{item.controlDate || '-'}</td>
-                                        <td style={{ padding: '16px', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{item.nextControlDate || '-'}</td>
+                                        <td style={{ padding: '16px', fontFamily: 'monospace' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <span style={{ color: '#64748b' }}>{item.controlDate || '-'}</span>
+                                                <span style={{ fontWeight: '700', color: 'var(--color-primary)' }}>{item.nextControlDate || '-'}</span>
+                                            </div>
+                                        </td>
                                         <td style={{ padding: '16px' }}>
                                             <span style={countdownStyle}>
                                                 {daysRemaining}

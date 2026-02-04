@@ -113,13 +113,19 @@ const generateInventory = () => {
         const nextControlDate = new Date(controlDate);
         nextControlDate.setFullYear(nextControlDate.getFullYear() + 1);
 
+        const capacities = cat.id === 'vinc' ? ['2 Ton', '5 Ton', '10 Ton'] :
+          ['buhar', 'kompresor', 'boyler', 'genlesme'].includes(cat.id) ? ['500 L', '1000 L', '2000 L'] :
+            cat.id === 'forklift' ? ['1.5 Ton', '2.5 Ton', '3 Ton'] : ['-'];
+
         items.push({
           id: idCounter++,
           locationId: loc.id,
           categoryId: cat.id,
+          reportNo: `${Math.floor(Math.random() * 90000) + 10000}/${Math.floor(Math.random() * 9000) + 1000}/${Math.floor(Math.random() * 90000) + 10000}`,
           name: `${cat.label} ${i + 1}`,
           brand: brands[Math.floor(Math.random() * brands.length)],
           serialNo: `SN-${Math.floor(Math.random() * 10000)}`,
+          capacity: capacities[Math.floor(Math.random() * capacities.length)],
           place: places[Math.floor(Math.random() * places.length)],
           deficiencies: deficiencies,
           reportStatus: isDefective ? "Kusurlu" : "Uygun",
@@ -145,9 +151,11 @@ const generateInventory = () => {
           id: idCounter++,
           locationId: loc.id,
           categoryId: sub.id, // We use sub.id as categoryId for actual items
+          reportNo: `${Math.floor(Math.random() * 90000) + 10000}/${Math.floor(Math.random() * 9000) + 1000}/${Math.floor(Math.random() * 90000) + 10000}`,
           name: spec.name,
           brand: spec.brand,
           serialNo: `SPEC-${sub.id.toUpperCase()}-${idx + 100}`,
+          capacity: '-',
           place: spec.place,
           deficiencies: isDefective ? ["Periyodik muayene sırasında teknik uygunsuzluk tespit edildi."] : [],
           reportStatus: isDefective ? "Kusurlu" : "Uygun",
@@ -197,11 +205,13 @@ const generateArchiveData = () => {
               locationId: loc.id,
               categoryId: cat.id,
               year: year,
+              reportNo: `${Math.floor(Math.random() * 90000) + 10000}/${Math.floor(Math.random() * 9000) + 1000}/${Math.floor(Math.random() * 90000) + 10000}`,
               controlDate: cycle.date,
               cycleLabel: cycle.label,
               name: `${cat.label} ${i + 1}`,
               brand: brands[Math.floor(Math.random() * brands.length)],
               serialNo: `SN-${year}-${Math.floor(Math.random() * 9999)}`,
+              capacity: '2.5 Ton',
               place: places[Math.floor(Math.random() * places.length)],
               deficiencies: deficiencies,
               reportStatus: isDefective ? "Kusurlu" : "Uygun",
@@ -265,4 +275,18 @@ export const AUTHORIZED_PERSONS = [
   { id: 5, name: "Selin Yıldız", title: "İSG Teknisyeni", location: "İzeltaş Işıkkent Fabrikası", department: "Teknik Emniyet / İSG", gsm: "0555 567 89 01", email: "selin.yildiz@izeltas.com.tr" },
   { id: 6, name: "Murat Şahin", title: "İdari İşler Sorumlusu", location: "İzeltaş Pınarbaşı Tesisi", department: "İdari İşler", gsm: "0544 678 90 12", email: "murat.sahin@izeltas.com.tr" },
   { id: 7, name: "Elif Aydın", title: "Satın Alma Uzmanı", location: "İzeltaş Pınarbaşı Tesisi", department: "Satın Alma", gsm: "0535 789 01 23", email: "elif.aydin@izeltas.com.tr" }
+];
+
+export const CONTRACTS = [
+  { id: 101, contractNo: "8990123", startDate: "01.01.2026", endDate: "01.01.2027", locationId: 1, locationName: "İzeltaş Torbalı Fabrikası" },
+  { id: 102, contractNo: "8990124", startDate: "15.03.2026", endDate: "15.03.2027", locationId: 2, locationName: "İzeltaş Işıkkent Fabrikası" },
+  { id: 103, contractNo: "8990125", startDate: "10.06.2026", endDate: "10.06.2027", locationId: 3, locationName: "İzeltaş Pınarbaşı Tesisi" }
+];
+
+export const DEFICIENCY_STATS = [
+  { label: "Bakım Eksikliği", value: 45 },
+  { label: "Emniyet Kilidi Arızası", value: 25 },
+  { label: "Sızıntı/Kaçak", value: 15 },
+  { label: "Yük Etiketi Eksikliği", value: 10 },
+  { label: "Diğer", value: 5 }
 ];
