@@ -313,9 +313,23 @@ export const AUTHORIZED_PERSONS = [
 ];
 
 export const CONTRACTS = [
-  { id: 101, contractNo: "8990123", startDate: "01.01.2026", endDate: "01.01.2027", locationId: 1, locationName: "İzeltaş Torbalı Fabrikası" },
-  { id: 102, contractNo: "8990124", startDate: "15.03.2026", endDate: "15.03.2027", locationId: 2, locationName: "İzeltaş Işıkkent Fabrikası" },
-  { id: 103, contractNo: "8990125", startDate: "10.06.2026", endDate: "10.06.2027", locationId: 3, locationName: "İzeltaş Pınarbaşı Tesisi" }
+  // 2026 Aktif Sözleşmeler
+  { id: 101, contractNo: "8990123", startDate: "01.01.2026", endDate: "01.01.2027", locationId: 1, locationName: "İzeltaş Torbalı Fabrikası", year: 2026 },
+  { id: 102, contractNo: "8990124", startDate: "15.03.2026", endDate: "15.03.2027", locationId: 2, locationName: "İzeltaş Işıkkent Fabrikası", year: 2026 },
+  { id: 103, contractNo: "8990125", startDate: "10.06.2026", endDate: "10.06.2027", locationId: 3, locationName: "İzeltaş Pınarbaşı Tesisi", year: 2026 },
+  { id: 104, contractNo: "8990126", startDate: "01.02.2026", endDate: "01.02.2027", locationId: 4, locationName: "İzeltaş Ankara Lojistik Merkezi", year: 2026 },
+  { id: 105, contractNo: "8990127", startDate: "20.04.2026", endDate: "20.04.2027", locationId: 6, locationName: "İzeltaş Dudullu Ana Depo", year: 2026 },
+
+  // 2025 Arşiv/Biten Sözleşmeler
+  { id: 201, contractNo: "7880990", startDate: "01.01.2025", endDate: "01.01.2026", locationId: 1, locationName: "İzeltaş Torbalı Fabrikası", year: 2025 },
+  { id: 202, contractNo: "7880991", startDate: "15.03.2025", endDate: "15.03.2026", locationId: 2, locationName: "İzeltaş Işıkkent Fabrikası", year: 2025 },
+  { id: 203, contractNo: "7880992", startDate: "10.01.2025", endDate: "10.01.2026", locationId: 5, locationName: "İzeltaş OSTİM Satış ve Servis", year: 2025 },
+  { id: 204, contractNo: "7880993", startDate: "05.05.2025", endDate: "05.05.2026", locationId: 7, locationName: "İzeltaş İkitelli Teknik Tesis", year: 2025 },
+
+  // 2024 Arşiv Sözleşmeler
+  { id: 301, contractNo: "6770550", startDate: "01.01.2024", endDate: "01.01.2025", locationId: 1, locationName: "İzeltaş Torbalı Fabrikası", year: 2024 },
+  { id: 302, contractNo: "6770551", startDate: "01.06.2024", endDate: "01.06.2025", locationId: 3, locationName: "İzeltaş Pınarbaşı Tesisi", year: 2024 },
+  { id: 303, contractNo: "6770552", startDate: "20.09.2024", endDate: "20.09.2025", locationId: 4, locationName: "İzeltaş Ankara Lojistik Merkezi", year: 2024 }
 ];
 
 export const DEFICIENCY_STATS = [

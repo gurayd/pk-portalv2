@@ -28,6 +28,7 @@ export default function Dashboard({ onLogout }) {
     const [statReportNo, setStatReportNo] = useState('');
     const [selectedEquipmentTypes, setSelectedEquipmentTypes] = useState(['ALL']);
     const [selectedLocations, setSelectedLocations] = useState(['ALL']);
+    const [selectedContractYear, setSelectedContractYear] = useState('ALL');
     const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
     const [isLocationFilterOpen, setIsLocationFilterOpen] = useState(false);
     const filterDropdownRef = useRef(null);
@@ -160,22 +161,22 @@ export default function Dashboard({ onLogout }) {
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
+        setSelectedLocation(null);
+        setSelectedLocations(['ALL']);
         if (tab === 'CONTRACTS') {
             setView('CONTRACT_LIST');
+            setSelectedContractYear('ALL');
         } else if (tab === 'STATS') {
             setView('STATS_PAGE');
         } else if (tab === 'LIVE') {
-            setView('INVENTORY');
-            setSelectedLocation(null);
-            setSelectedLocations(['ALL']);
+            setView('LOCATIONS');
             setSelectedEquipmentTypes(['ALL']);
         } else if (tab === 'OFFICIALS') {
             setView('LIST');
-            setSelectedLocations(['ALL']);
-            setSelectedLocation(null);
+        } else if (tab === 'ANNOUNCEMENTS') {
+            setView('LIST');
         } else {
             setView('LOCATIONS');
-            setSelectedLocation(null);
             setSelectedCategory(null);
             setSelectedSubCategory(null);
             setSelectedYear(null);
@@ -849,50 +850,170 @@ export default function Dashboard({ onLogout }) {
 
                     {/* CONTRACTS VIEW */}
                     {activeTab === 'CONTRACTS' && view === 'CONTRACT_LIST' && (
-                        <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-                            <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9' }}>
-                                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700' }}>Aktif Sözleşmeler Listesi</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            {/* Filter Section */}
+                            <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap', backgroundColor: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                <div style={{ position: 'relative', width: '260px' }} ref={locationFilterRef}>
+                                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#64748b', marginBottom: '6px' }}>Lokasyon Filtresi</label>
+                                    <div
+                                        onClick={() => setIsLocationFilterOpen(!isLocationFilterOpen)}
+                                        style={{ padding: '10px 14px', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '10px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                    >
+                                        <span style={{ fontSize: '0.85rem', fontWeight: '600' }}>
+                                            {selectedLocations.includes('ALL') ? 'Tüm Lokasyonlar' : `${selectedLocations.length} Seçili`}
+                                        </span>
+                                        <ChevronDown size={16} color="#94a3b8" />
+                                    </div>
+
+                                    {isLocationFilterOpen && (
+                                        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: 'var(--shadow-lg)', zIndex: 110, padding: '12px' }}>
+                                            <div
+                                                onClick={() => setSelectedLocations(['ALL'])}
+                                                style={{ padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', backgroundColor: selectedLocations.includes('ALL') ? '#eff6ff' : 'transparent' }}
+                                            >
+                                                <div style={{ width: '16px', height: '16px', border: '1px solid var(--color-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: selectedLocations.includes('ALL') ? 'var(--color-primary)' : 'transparent' }}>
+                                                    {selectedLocations.includes('ALL') && <Check size={12} color="white" />}
+                                                </div>
+                                                <span style={{ fontSize: '0.85rem', fontWeight: '700' }}>Tüm Lokasyonlar</span>
+                                            </div>
+                                            <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                                                {Object.entries(locationGroups).map(([city, locs]) => (
+                                                    <div key={city} style={{ marginBottom: '10px' }}>
+                                                        <div
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const cityLocIds = locs.map(l => l.id);
+                                                                const allInCitySelected = cityLocIds.every(id => selectedLocations.includes(id));
+                                                                let newLocs = selectedLocations.filter(id => id !== 'ALL');
+                                                                if (allInCitySelected) newLocs = newLocs.filter(id => !cityLocIds.includes(id));
+                                                                else newLocs = [...new Set([...newLocs, ...cityLocIds])];
+                                                                if (newLocs.length === 0 || newLocs.length === LOCATIONS.length) setSelectedLocations(['ALL']);
+                                                                else setSelectedLocations(newLocs);
+                                                            }}
+                                                            style={{ padding: '4px 8px', fontSize: '0.7rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                                            className="hover-bg-slate-50"
+                                                        >
+                                                            <div style={{ width: '14px', height: '14px', border: '1px solid #cbd5e1', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: locs.map(l => l.id).every(id => selectedLocations.includes(id)) ? '#94a3b8' : 'transparent' }}>
+                                                                {locs.map(l => l.id).every(id => selectedLocations.includes(id)) && <Check size={8} color="white" />}
+                                                            </div>
+                                                            {city}
+                                                        </div>
+                                                        {locs.map(loc => {
+                                                            const isSelected = selectedLocations.includes(loc.id);
+                                                            return (
+                                                                <div
+                                                                    key={loc.id}
+                                                                    onClick={() => {
+                                                                        let newLocs = selectedLocations.filter(id => id !== 'ALL');
+                                                                        if (isSelected) newLocs = newLocs.filter(id => id !== loc.id);
+                                                                        else newLocs = [...newLocs, loc.id];
+                                                                        if (newLocs.length === 0 || newLocs.length === LOCATIONS.length) setSelectedLocations(['ALL']);
+                                                                        else setSelectedLocations(newLocs);
+                                                                    }}
+                                                                    style={{ padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: isSelected ? '#eff6ff' : 'transparent' }}
+                                                                    className="hover-bg-slate-50"
+                                                                >
+                                                                    <div style={{ width: '14px', height: '14px', border: '1px solid #cbd5e1', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent' }}>
+                                                                        {isSelected && <Check size={10} color="white" />}
+                                                                    </div>
+                                                                    <span style={{ fontSize: '0.8rem' }}>{loc.name}</span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div style={{ width: '160px' }}>
+                                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#64748b', marginBottom: '6px' }}>Yıl Filtresi</label>
+                                    <select
+                                        value={selectedContractYear}
+                                        onChange={(e) => setSelectedContractYear(e.target.value)}
+                                        style={{ width: '100%', padding: '10px 14px', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '0.85rem', fontWeight: '600', outline: 'none', cursor: 'pointer' }}
+                                    >
+                                        <option value="ALL">Tüm Yıllar</option>
+                                        <option value="2026">2026</option>
+                                        <option value="2025">2025 (Arşiv)</option>
+                                        <option value="2024">2024 (Arşiv)</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div style={{ overflowX: 'auto' }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                                    <thead>
-                                        <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>SÖZLEŞME NO</th>
-                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>BAŞLANGIÇ TARİHİ</th>
-                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>BİTİŞ TARİHİ</th>
-                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>KONTROL ADRESİ</th>
-                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>İŞLEMLER</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {CONTRACTS.map(contract => (
-                                            <tr key={contract.id} style={{ borderBottom: '1px solid #f1f5f9' }} className="hover-bg-slate-50">
-                                                <td style={{ padding: '16px', fontWeight: '700', color: 'var(--color-primary)' }}>{contract.contractNo}</td>
-                                                <td style={{ padding: '16px' }}>{contract.startDate}</td>
-                                                <td style={{ padding: '16px' }}>{contract.endDate}</td>
-                                                <td style={{ padding: '16px', color: '#64748b' }}>{contract.locationName}</td>
-                                                <td style={{ padding: '16px' }}>
-                                                    <button
-                                                        onClick={() => handleSelectContract(contract)}
-                                                        className="hover-lift"
-                                                        style={{
-                                                            padding: '8px 16px',
-                                                            backgroundColor: 'var(--color-primary)',
-                                                            color: 'white',
-                                                            border: 'none',
-                                                            borderRadius: '8px',
-                                                            fontSize: '0.85rem',
-                                                            fontWeight: '600',
-                                                            cursor: 'pointer'
-                                                        }}
-                                                    >
-                                                        Sözleşmeye Git
-                                                    </button>
-                                                </td>
+
+                            <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
+                                <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700' }}>Sözleşmeler Listesi</h3>
+                                    <span style={{ fontSize: '0.85rem', color: '#64748b', backgroundColor: '#f1f5f9', padding: '4px 12px', borderRadius: '20px', fontWeight: '600' }}>
+                                        Toplam: {CONTRACTS.filter(c => {
+                                            const locMatch = selectedLocations.includes('ALL') || selectedLocations.includes(c.locationId);
+                                            const yearMatch = selectedContractYear === 'ALL' || c.year.toString() === selectedContractYear;
+                                            return locMatch && yearMatch;
+                                        }).length}
+                                    </span>
+                                </div>
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                        <thead>
+                                            <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>SÖZLEŞME NO</th>
+                                                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>DÖNEM</th>
+                                                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>KONTROL ADRESİ</th>
+                                                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>DURUM</th>
+                                                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>İŞLEMLER</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {CONTRACTS.filter(c => {
+                                                const locMatch = selectedLocations.includes('ALL') || selectedLocations.includes(c.locationId);
+                                                const yearMatch = selectedContractYear === 'ALL' || c.year.toString() === selectedContractYear;
+                                                return locMatch && yearMatch;
+                                            }).map(contract => (
+                                                <tr key={contract.id} style={{ borderBottom: '1px solid #f1f5f9' }} className="hover-bg-slate-50">
+                                                    <td style={{ padding: '16px', fontWeight: '700', color: 'var(--color-primary)' }}>{contract.contractNo}</td>
+                                                    <td style={{ padding: '16px' }}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                            <span style={{ fontSize: '0.85rem', fontWeight: '600' }}>{contract.startDate} - {contract.endDate}</span>
+                                                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{contract.year} Sezonu</span>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '16px', color: '#64748b', fontSize: '0.85rem' }}>{contract.locationName}</td>
+                                                    <td style={{ padding: '16px' }}>
+                                                        <span style={{
+                                                            padding: '4px 10px',
+                                                            borderRadius: '6px',
+                                                            fontSize: '0.8rem',
+                                                            fontWeight: '700',
+                                                            backgroundColor: contract.year === 2026 ? '#ecfdf5' : '#fef2f2',
+                                                            color: contract.year === 2026 ? '#059669' : '#dc2626'
+                                                        }}>
+                                                            {contract.year === 2026 ? 'Aktif' : 'Arşiv'}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ padding: '16px' }}>
+                                                        <button
+                                                            onClick={() => handleSelectContract(contract)}
+                                                            className="hover-lift"
+                                                            style={{
+                                                                padding: '8px 16px',
+                                                                backgroundColor: 'var(--color-primary)',
+                                                                color: 'white',
+                                                                border: 'none',
+                                                                borderRadius: '8px',
+                                                                fontSize: '0.85rem',
+                                                                fontWeight: '600',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        >
+                                                            Detaylar
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     )}
