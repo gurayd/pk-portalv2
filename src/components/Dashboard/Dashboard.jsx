@@ -53,6 +53,15 @@ export default function Dashboard({ onLogout }) {
 
     const allTypeIds = [...EQUIPMENT_GROUPS.flatMap(g => g.types)];
 
+    const locationGroups = useMemo(() => {
+        const groups = {};
+        LOCATIONS.forEach(loc => {
+            if (!groups[loc.city]) groups[loc.city] = [];
+            groups[loc.city].push(loc);
+        });
+        return groups;
+    }, []);
+
     const equipmentHistory = useMemo(() => {
         if (!statReportNo) return null;
         const current = INVENTORY.find(i => i.reportNo === statReportNo);
@@ -160,8 +169,10 @@ export default function Dashboard({ onLogout }) {
             setSelectedLocation(null);
             setSelectedLocations(['ALL']);
             setSelectedEquipmentTypes(['ALL']);
-        } else if (tab === 'ANNOUNCEMENTS') {
-            setView('ANNOUNCEMENTS_VIEW');
+        } else if (tab === 'OFFICIALS') {
+            setView('LIST');
+            setSelectedLocations(['ALL']);
+            setSelectedLocation(null);
         } else {
             setView('LOCATIONS');
             setSelectedLocation(null);
@@ -575,40 +586,106 @@ export default function Dashboard({ onLogout }) {
                                         }}>
                                             <div
                                                 onClick={() => setSelectedLocations(['ALL'])}
-                                                style={{ padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', backgroundColor: selectedLocations.includes('ALL') ? '#eff6ff' : 'transparent' }}
+                                                style={{ padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', backgroundColor: selectedLocations.includes('ALL') ? '#eff6ff' : 'transparent', border: '1px solid ' + (selectedLocations.includes('ALL') ? '#bfdbfe' : '#f1f5f9') }}
                                             >
-                                                <div style={{ width: '18px', height: '18px', border: '2px solid var(--color-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: selectedLocations.includes('ALL') ? 'var(--color-primary)' : 'transparent' }}>
+                                                <div style={{ width: '20px', height: '20px', border: '2px solid var(--color-primary)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: selectedLocations.includes('ALL') ? 'var(--color-primary)' : 'transparent' }}>
                                                     {selectedLocations.includes('ALL') && <Check size={14} color="white" />}
                                                 </div>
-                                                <span style={{ fontWeight: '700' }}>Tüm Adresler</span>
+                                                <span style={{ fontWeight: '800', color: 'var(--color-primary)' }}>Tüm Şehirler ve Adresler</span>
                                             </div>
-                                            {LOCATIONS.map(loc => {
-                                                const isSelected = selectedLocations.includes(loc.id);
-                                                return (
-                                                    <div
-                                                        key={loc.id}
-                                                        onClick={() => {
-                                                            let newLocs = selectedLocations.filter(id => id !== 'ALL');
-                                                            if (isSelected) {
-                                                                newLocs = newLocs.filter(id => id !== loc.id);
-                                                            } else {
-                                                                newLocs = [...newLocs, loc.id];
-                                                            }
-                                                            if (newLocs.length === 0 || newLocs.length === LOCATIONS.length) {
-                                                                setSelectedLocations(['ALL']);
-                                                            } else {
-                                                                setSelectedLocations(newLocs);
-                                                            }
-                                                        }}
-                                                        style={{ padding: '8px 10px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: isSelected ? '#eff6ff' : 'transparent' }}
-                                                    >
-                                                        <div style={{ width: '16px', height: '16px', border: '1px solid #cbd5e1', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent', borderColor: isSelected ? 'var(--color-primary)' : '#cbd5e1' }}>
-                                                            {isSelected && <Check size={12} color="white" />}
+
+                                            <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '4px' }}>
+                                                {Object.entries(locationGroups).map(([city, locs]) => (
+                                                    <div key={city} style={{ marginBottom: '16px' }}>
+                                                        <div
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const cityLocIds = locs.map(l => l.id);
+                                                                const allInCitySelected = cityLocIds.every(id => selectedLocations.includes(id));
+
+                                                                let newLocs = selectedLocations.filter(id => id !== 'ALL');
+                                                                if (allInCitySelected) {
+                                                                    newLocs = newLocs.filter(id => !cityLocIds.includes(id));
+                                                                } else {
+                                                                    newLocs = [...new Set([...newLocs, ...cityLocIds])];
+                                                                }
+
+                                                                if (newLocs.length === 0 || newLocs.length === LOCATIONS.length) setSelectedLocations(['ALL']);
+                                                                else setSelectedLocations(newLocs);
+                                                            }}
+                                                            style={{
+                                                                padding: '6px 8px',
+                                                                borderRadius: '6px',
+                                                                fontSize: '0.75rem',
+                                                                fontWeight: '700',
+                                                                color: '#64748b',
+                                                                textTransform: 'uppercase',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '10px',
+                                                                cursor: 'pointer',
+                                                                marginBottom: '4px'
+                                                            }}
+                                                            className="hover-bg-slate-50"
+                                                        >
+                                                            <div style={{
+                                                                width: '16px',
+                                                                height: '16px',
+                                                                border: '1px solid #cbd5e1',
+                                                                borderRadius: '50%',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                backgroundColor: locs.map(l => l.id).every(id => selectedLocations.includes(id)) ? '#94a3b8' : 'transparent'
+                                                            }}>
+                                                                {locs.map(l => l.id).every(id => selectedLocations.includes(id)) && <Check size={10} color="white" />}
+                                                            </div>
+                                                            {city}
                                                         </div>
-                                                        <span style={{ fontSize: '0.85rem' }}>{loc.name}</span>
+                                                        <div style={{ display: 'grid', gap: '4px' }}>
+                                                            {locs.map(loc => {
+                                                                const isSelected = selectedLocations.includes(loc.id);
+                                                                return (
+                                                                    <div
+                                                                        key={loc.id}
+                                                                        onClick={() => {
+                                                                            let newLocs = selectedLocations.filter(id => id !== 'ALL');
+                                                                            if (isSelected) {
+                                                                                newLocs = newLocs.filter(id => id !== loc.id);
+                                                                            } else {
+                                                                                newLocs = [...newLocs, loc.id];
+                                                                            }
+                                                                            if (newLocs.length === 0 || newLocs.length === LOCATIONS.length) {
+                                                                                setSelectedLocations(['ALL']);
+                                                                            } else {
+                                                                                setSelectedLocations(newLocs);
+                                                                            }
+                                                                        }}
+                                                                        style={{
+                                                                            padding: '8px 12px',
+                                                                            borderRadius: '8px',
+                                                                            cursor: 'pointer',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '12px',
+                                                                            backgroundColor: isSelected ? '#f0f9ff' : 'transparent',
+                                                                            transition: 'all 0.2s'
+                                                                        }}
+                                                                        className="hover-bg-slate-50"
+                                                                    >
+                                                                        <div style={{ width: '18px', height: '18px', border: '1px solid #cbd5e1', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent', borderColor: isSelected ? 'var(--color-primary)' : '#cbd5e1' }}>
+                                                                            {isSelected && <Check size={12} color="white" />}
+                                                                        </div>
+                                                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                            <span style={{ fontSize: '0.85rem', fontWeight: isSelected ? '700' : '500', color: isSelected ? 'var(--color-primary)' : 'var(--text-primary)' }}>{loc.name}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
                                                     </div>
-                                                );
-                                            })}
+                                                ))}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -830,51 +907,171 @@ export default function Dashboard({ onLogout }) {
 
                     {/* OFFICIALS SPECIFIC VIEW */}
                     {activeTab === 'OFFICIALS' && view === 'LIST' && (
-                        <div style={{
-                            backgroundColor: 'white',
-                            borderRadius: '16px',
-                            border: '1px solid #e2e8f0',
-                            overflow: 'hidden',
-                            boxShadow: 'var(--shadow-sm)'
-                        }}>
-                            <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9' }}>
-                                <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', fontWeight: '700' }}>Yetkili Kişiler Listesi</h3>
-                                <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b', fontStyle: 'italic' }}>
-                                    * Tabloda bir değişiklik yapılması gerektiğinde lütfen Teknik Hizmetler ile iletişime geçiniz.
-                                </p>
-                            </div>
-                            <div style={{ overflowX: 'auto' }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                                    <thead>
-                                        <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>AD SOYAD</th>
-                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>ÜNVAN</th>
-                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>BULUNDUĞU BİRİM/BÖLÜM</th>
-                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>GSM NO</th>
-                                            <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>E-MAIL</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {AUTHORIZED_PERSONS.filter(p => p.location === selectedLocation.name).map(person => (
-                                            <tr key={person.id} style={{ borderBottom: '1px solid #f1f5f9' }} className="hover-bg-slate-50">
-                                                <td style={{ padding: '16px', fontWeight: '600', fontSize: '0.9rem' }}>{person.name}</td>
-                                                <td style={{ padding: '16px', fontSize: '0.9rem' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <Briefcase size={14} color="#94a3b8" />
-                                                        {person.title}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                            {/* Filter Section */}
+                            <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                                <div style={{ position: 'relative', width: '300px' }} ref={locationFilterRef}>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>Lokasyon Bazlı Filtrele</label>
+                                    <div
+                                        onClick={() => setIsLocationFilterOpen(!isLocationFilterOpen)}
+                                        style={{
+                                            padding: '12px 16px',
+                                            backgroundColor: 'white',
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: '12px',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            boxShadow: 'var(--shadow-sm)'
+                                        }}
+                                    >
+                                        <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '600' }}>
+                                            {selectedLocations.includes('ALL') ? 'Tüm Lokasyonlar' : `${selectedLocations.length} Lokasyon Seçili`}
+                                        </span>
+                                        <ChevronDown size={18} color="#94a3b8" />
+                                    </div>
+
+                                    {isLocationFilterOpen && (
+                                        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: 'var(--shadow-lg)', zIndex: 110, padding: '12px' }}>
+                                            <div
+                                                onClick={() => setSelectedLocations(['ALL'])}
+                                                style={{ padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', backgroundColor: selectedLocations.includes('ALL') ? '#eff6ff' : 'transparent' }}
+                                            >
+                                                <div style={{ width: '18px', height: '18px', border: '2px solid var(--color-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: selectedLocations.includes('ALL') ? 'var(--color-primary)' : 'transparent' }}>
+                                                    {selectedLocations.includes('ALL') && <Check size={14} color="white" />}
+                                                </div>
+                                                <span style={{ fontWeight: '700' }}>Tüm Lokasyonlar</span>
+                                            </div>
+                                            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                                {Object.entries(locationGroups).map(([city, locs]) => (
+                                                    <div key={city} style={{ marginBottom: '12px' }}>
+                                                        <div
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const cityLocIds = locs.map(l => l.id);
+                                                                const allInCitySelected = cityLocIds.every(id => selectedLocations.includes(id));
+
+                                                                let newLocs = selectedLocations.filter(id => id !== 'ALL');
+                                                                if (allInCitySelected) {
+                                                                    newLocs = newLocs.filter(id => !cityLocIds.includes(id));
+                                                                } else {
+                                                                    newLocs = [...new Set([...newLocs, ...cityLocIds])];
+                                                                }
+
+                                                                if (newLocs.length === 0 || newLocs.length === LOCATIONS.length) setSelectedLocations(['ALL']);
+                                                                else setSelectedLocations(newLocs);
+                                                            }}
+                                                            style={{
+                                                                padding: '4px 8px',
+                                                                borderRadius: '6px',
+                                                                fontSize: '0.7rem',
+                                                                fontWeight: '700',
+                                                                color: '#64748b',
+                                                                textTransform: 'uppercase',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '8px',
+                                                                cursor: 'pointer',
+                                                                marginBottom: '2px'
+                                                            }}
+                                                            className="hover-bg-slate-50"
+                                                        >
+                                                            <div style={{
+                                                                width: '14px',
+                                                                height: '14px',
+                                                                border: '1px solid #cbd5e1',
+                                                                borderRadius: '50%',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                backgroundColor: locs.map(l => l.id).every(id => selectedLocations.includes(id)) ? '#94a3b8' : 'transparent'
+                                                            }}>
+                                                                {locs.map(l => l.id).every(id => selectedLocations.includes(id)) && <Check size={8} color="white" />}
+                                                            </div>
+                                                            {city}
+                                                        </div>
+                                                        {locs.map(loc => {
+                                                            const isSelected = selectedLocations.includes(loc.id);
+                                                            return (
+                                                                <div
+                                                                    key={loc.id}
+                                                                    onClick={() => {
+                                                                        let newLocs = selectedLocations.filter(id => id !== 'ALL');
+                                                                        if (isSelected) newLocs = newLocs.filter(id => id !== loc.id);
+                                                                        else newLocs = [...newLocs, loc.id];
+
+                                                                        if (newLocs.length === 0 || newLocs.length === LOCATIONS.length) setSelectedLocations(['ALL']);
+                                                                        else setSelectedLocations(newLocs);
+                                                                    }}
+                                                                    style={{ padding: '8px 10px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: isSelected ? '#eff6ff' : 'transparent' }}
+                                                                    className="hover-bg-slate-50"
+                                                                >
+                                                                    <div style={{ width: '16px', height: '16px', border: '1px solid #cbd5e1', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent', borderColor: isSelected ? 'var(--color-primary)' : '#cbd5e1' }}>
+                                                                        {isSelected && <Check size={12} color="white" />}
+                                                                    </div>
+                                                                    <span style={{ fontSize: '0.85rem', fontWeight: isSelected ? '600' : '400' }}>{loc.name}</span>
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
-                                                </td>
-                                                <td style={{ padding: '16px', fontSize: '0.9rem', color: '#64748b' }}>{person.department}</td>
-                                                <td style={{ padding: '16px', fontSize: '0.9rem', color: 'var(--color-primary)', fontWeight: '500' }}>
-                                                    {person.gsm.slice(0, -4)}****
-                                                </td>
-                                                <td style={{ padding: '16px', fontSize: '0.9rem' }}>
-                                                    <a href={`mailto:${person.email}`} style={{ color: '#3b82f6', textDecoration: 'none' }}>{person.email}</a>
-                                                </td>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
+                                <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9' }}>
+                                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', fontWeight: '700' }}>Yetkili Kişiler Listesi</h3>
+                                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b', fontStyle: 'italic' }}>
+                                        * Tabloda bir değişiklik yapılması gerektiğinde lütfen Teknik Hizmetler ile iletişime geçiniz.
+                                    </p>
+                                </div>
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                        <thead>
+                                            <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>AD SOYAD</th>
+                                                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>ÜNVAN</th>
+                                                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>LOKASYON / BİRİM</th>
+                                                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>GSM NO</th>
+                                                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>E-MAIL</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {AUTHORIZED_PERSONS.filter(p => {
+                                                if (selectedLocations.includes('ALL')) return true;
+                                                const locIds = selectedLocations; // This contains loc IDs
+                                                const personLoc = LOCATIONS.find(l => l.name === p.location);
+                                                return personLoc && locIds.includes(personLoc.id);
+                                            }).map(person => (
+                                                <tr key={person.id} style={{ borderBottom: '1px solid #f1f5f9' }} className="hover-bg-slate-50">
+                                                    <td style={{ padding: '16px', fontWeight: '600', fontSize: '0.9rem' }}>{person.name}</td>
+                                                    <td style={{ padding: '16px', fontSize: '0.9rem' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <Briefcase size={14} color="#94a3b8" />
+                                                            {person.title}
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '16px', fontSize: '0.9rem' }}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                            <span style={{ fontWeight: '600', color: 'var(--color-primary)' }}>{person.location}</span>
+                                                            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{person.department}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '16px', fontSize: '0.9rem', color: 'var(--color-primary)', fontWeight: '500' }}>
+                                                        {person.gsm.slice(0, -4)}****
+                                                    </td>
+                                                    <td style={{ padding: '16px', fontSize: '0.9rem' }}>
+                                                        <a href={`mailto:${person.email}`} style={{ color: '#3b82f6', textDecoration: 'none' }}>{person.email}</a>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     )}

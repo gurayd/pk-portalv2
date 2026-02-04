@@ -9,21 +9,52 @@ export const COMPANY_INFO = {
 export const LOCATIONS = [
   {
     id: 1,
+    city: "İzmir",
     name: "İzeltaş Torbalı Fabrikası",
     address: "7 Eylül Mah. Celal Umur Cad. No:6 Torbalı / İzmir",
     description: "Ana üretim tesisi ve dövmehane."
   },
   {
     id: 2,
+    city: "İzmir",
     name: "İzeltaş Işıkkent Fabrikası",
     address: "Ayakkabıcılar Sitesi, Işıkkent / İzmir",
     description: "Depolama ve sevkiyat merkezi."
   },
   {
     id: 3,
+    city: "İzmir",
     name: "İzeltaş Pınarbaşı Tesisi",
     address: "Pınarbaşı Sanayi Bölgesi / İzmir",
     description: "Isıl işlem ve kaplama tesisi."
+  },
+  {
+    id: 4,
+    city: "Ankara",
+    name: "İzeltaş Ankara Lojistik Merkezi",
+    address: "Sincan Organize Sanayi Bölgesi / Ankara",
+    description: "İç Anadolu bölge dağıtım ve lojistik üssü."
+  },
+  {
+    id: 5,
+    city: "Ankara",
+    name: "İzeltaş OSTİM Satış ve Servis",
+    address: "100. Yıl Bulvarı No:45 OSTİM / Ankara",
+    description: "Bölge satış ofisi ve kalibrasyon laboratuvarı."
+  },
+  {
+    id: 6,
+    city: "İstanbul",
+    name: "İzeltaş Dudullu Ana Depo",
+    address: "Dudullu Organize Sanayi Bölgesi / İstanbul",
+    description: "Marmara Bölgesi ana sevkiyat merkezi."
+  },
+  {
+    id: 7,
+    city: "İstanbul",
+    name: "İzeltaş İkitelli Teknik Tesis",
+    address: "İkitelli OSB Metal-İş Sanayi Sitesi / İstanbul",
+    description: "Teknik servis ve ürün geliştirme atölyesi."
   }
 ];
 
@@ -272,9 +303,13 @@ export const AUTHORIZED_PERSONS = [
   { id: 2, name: "Mustafa Demir", title: "Üretim Müdürü", location: "İzeltaş Torbalı Fabrikası", department: "Üretim", gsm: "0533 234 56 78", email: "mustafa.demir@izeltas.com.tr" },
   { id: 3, name: "Zeynep Kaya", title: "İSG Uzmanı", location: "İzeltaş Torbalı Fabrikası", department: "Teknik Emniyet / İSG", gsm: "0542 345 67 89", email: "zeynep.kaya@izeltas.com.tr" },
   { id: 4, name: "Caner Özkan", title: "Baş Mühendis", location: "İzeltaş Işıkkent Fabrikası", department: "Teknik Hizmetler", gsm: "0530 456 78 90", email: "caner.ozkan@izeltas.com.tr" },
-  { id: 5, name: "Selin Yıldız", title: "İSG Teknisyeni", location: "İzeltaş Işıkkent Fabrikası", department: "Teknik Emniyet / İSG", gsm: "0555 567 89 01", email: "selin.yildiz@izeltas.com.tr" },
+  { id: 5, name: "Selin Yıldız", title: "İSG Teknisyeni", location: "İzeltaş Işıkkent Fabrikası", department: "Teknik Enyet / İSG", gsm: "0555 567 89 01", email: "selin.yildiz@izeltas.com.tr" },
   { id: 6, name: "Murat Şahin", title: "İdari İşler Sorumlusu", location: "İzeltaş Pınarbaşı Tesisi", department: "İdari İşler", gsm: "0544 678 90 12", email: "murat.sahin@izeltas.com.tr" },
-  { id: 7, name: "Elif Aydın", title: "Satın Alma Uzmanı", location: "İzeltaş Pınarbaşı Tesisi", department: "Satın Alma", gsm: "0535 789 01 23", email: "elif.aydin@izeltas.com.tr" }
+  { id: 7, name: "Elif Aydın", title: "Satın Alma Uzmanı", location: "İzeltaş Pınarbaşı Tesisi", department: "Satın Alma", gsm: "0535 789 01 23", email: "elif.aydin@izeltas.com.tr" },
+  { id: 8, name: "Hüseyin Ak", title: "Lojistik Sorumlusu", location: "İzeltaş Ankara Lojistik Merkezi", department: "Lojistik", gsm: "0532 987 65 43", email: "huseyin.ak@izeltas.com.tr" },
+  { id: 9, name: "Banu Gök", title: "Teknik Servis Şefi", location: "İzeltaş OSTİM Satış ve Servis", department: "Teknik Servis", gsm: "0533 876 54 32", email: "banu.gok@izeltas.com.tr" },
+  { id: 10, name: "Kemal Sun", title: "Depo Müdürü", location: "İzeltaş Dudullu Ana Depo", department: "Operasyon", gsm: "0542 765 43 21", email: "kemal.sun@izeltas.com.tr" },
+  { id: 11, name: "Arzu Bulut", title: "Ar-Ge Mühendisi", location: "İzeltaş İkitelli Teknik Tesis", department: "Ür-Ge", gsm: "0530 654 32 10", email: "arzu.bulut@izeltas.com.tr" }
 ];
 
 export const CONTRACTS = [
